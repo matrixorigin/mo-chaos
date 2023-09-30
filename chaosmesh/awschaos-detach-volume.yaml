@@ -1,0 +1,13 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: AWSChaos
+metadata:
+  name: ec2-detach-volume-example
+  namespace: chaos-mesh
+spec:
+  action: ec2-stop
+  secretName: 'cloud-key-secret'
+  awsRegion: 'us-east-2'
+  ec2Instance: 'your-ec2-instance-id'
+  volumeID: 'your-volume-id'
+  deviceName: '/dev/sdf'
+  duration: '5m'

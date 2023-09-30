@@ -1,0 +1,16 @@
+case: 
+  name: mo-tester
+  times: 4
+  interval: 50
+  path: /root/matrixone/test/distributed/cases
+  ip: 127.0.0.1
+  port: 6501
+  user: dump
+  pwd: 111
+
+
+chaos:
+  name: pod-failure
+  duration: 6
+  interval: 10
+  total: 300   
