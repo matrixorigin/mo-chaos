@@ -1,6 +1,6 @@
-from scripts.Command import *
+from scripts.command import *
 from scripts.controller import execute_both
-from scripts.Logger import Logger
+from scripts.logger import Logger
 
 if __name__ == "__main__":
     cmd = Command()

@@ -1,26 +1,25 @@
 import time
 import subprocess
-from Yaml import Yaml
 import yaml
-from Logger import Logger
 import os
 import re
+
 
 def command_for_case(conf, ip, port, user, pwd):
     case_path = conf["case-path"]
 
-    if ip == None:
+    if ip is None:
         ip = conf['case-ip']
-    
-    if port == None:
+
+    if port is None:
         port = conf['case-port']
 
-    if user == None:
+    if user is None:
         user = conf['case-user']
-    
-    if pwd == None:
+
+    if pwd is None:
         pwd = conf['case-pwd']
-  
+
     if conf['case-name'] == 'mo-tester':
         command = command_for_tester(case_path, ip, port, user, pwd)
     elif conf['case-name'] == 'mo-tpch':
@@ -41,7 +40,7 @@ def command_for_tester(path, ip, port, user, pwd):
     addr = "{}:{}".format(ip, port)
     data["jdbc"]["server"][0]["addr"] = addr
     data["user"]["name"] = user
-    data["user"]["password"] = pwd    
+    data["user"]["password"] = pwd
 
     with open("/root/mo-tester/mo.yml", 'w') as file:
         yaml.dump(data, file)
@@ -68,10 +67,10 @@ def run_case_tool(conf, command, log, report):
     except OSError:
         pass
 
-    for i in range(1, times+1):        
+    for i in range(1, times + 1):
         os.chdir("/root/mo-tester")
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) 
-        stdout, stderr =  process.communicate()
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdout, stderr = process.communicate()
         try:
             with open("../mo-tester/report/report.txt", "r") as file:
                 report_content = file.read().strip()
@@ -86,24 +85,22 @@ def run_case_tool(conf, command, log, report):
                 report_content = "The result of the {}th case tests: \n{}".format(i, report_content)
 
             log.logger.info(report_content)
-            
+
             fail_or_not(report_content, i, log, report)
-                       
-            
         except IOError:
             log.logger.error("There is something wrong with case tests:\n{}".format(stderr.strip()))
-        
+
     os.chdir("/root/chaos_injection_tool")
-    
+
 
 def fail_or_not(content, i, log, report):
     matches = re.findall(r'FAILED :.', content)
     fail = matches[0]
-    num = fail[len(fail)-1]
+    num = fail[len(fail) - 1]
     if int(num) > 0:
         error_file = "{}th_error.txt".format(i)
         copy_command = "cp /root/mo-tester/report/error.txt /root/chaos_injection_tool/error/{}".format(error_file)
-        subprocess.Popen(copy_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)  
+        subprocess.Popen(copy_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         error_path = "The path for error.txt: /root/chaos_injection_tool/error/{}".format(error_file)
 
         log.logger.info(error_path)

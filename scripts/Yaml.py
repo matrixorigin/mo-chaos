@@ -1,16 +1,14 @@
 import yaml
 
 
-class Yaml():
+class Yaml:
     def __init__(self, path):
         self.path = path
-        
-
 
     def parse_case_yaml(self):
         with open(self.path, 'r') as file:
             data = yaml.safe_load(file)
-        
+
         conf = {}
 
         conf["case-name"] = data['case']["name"]
@@ -23,9 +21,8 @@ class Yaml():
         conf["case-pwd"] = data["case"]['pwd']
 
         conf['chaos-name'] = data['chaos']['name']
-        conf['chaos-duration'] =  data['chaos']['duration']
+        conf['chaos-duration'] = data['chaos']['duration']
         conf['chaos-interval'] = data['chaos']['interval']
         conf['chaos-total'] = data['chaos']['total']
 
         return conf
-
