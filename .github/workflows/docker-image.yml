@@ -2,11 +2,8 @@ name: Docker Image CI
 
 on:
   push:
-    branches:
-      - dev
-  pull_request:
-    branches:
-      - dev
+    tags:
+      - *
 
 jobs:
   build:
@@ -25,5 +22,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: matrixorigin/mo-chaos-driller:latest
+          tags: matrixorigin/mo-chaos-driller:$GITHUB_REF_NAME
           platforms: linux/amd64
