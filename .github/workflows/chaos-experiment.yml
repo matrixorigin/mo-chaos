@@ -1,14 +1,47 @@
 name: Chaos Experiment
 
+#on:
+#  workflow_dispatch:
+#    inputs:
+#
+#jobs:
+#  experiment:
+#    runs-on: ubuntu-latest
+#    container:
+#      image: matrixorigin/mo-chaos-driller:latest
+#    steps:
+#      - name: Run
+#        run: ''
+
 on:
   workflow_dispatch:
     inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+      print_tags:
+        description: 'True to print to STDOUT'
+        required: true
+        type: boolean
+      tags:
+        description: 'Test scenario tags'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to run tests against'
+        type: environment
+        required: true
 
 jobs:
-  experiment:
+  print-tag:
     runs-on: ubuntu-latest
-    container:
-      image: matrixorigin/mo-chaos-driller:latest
+    if:  ${{ inputs.print_tags }}
     steps:
-      - name: Run
-        run: ''
+      - name: Print the input tag to STDOUT
+        run: echo  The tags are ${{ inputs.tags }}
