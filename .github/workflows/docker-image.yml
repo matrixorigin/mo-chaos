@@ -24,5 +24,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: matrixorigin/mo-chaos-driller:${{ github.ref_name }}
+          tags: matrixorigin/mo-chaos-driller:${{ github.ref_name }},matrixorigin/mo-chaos-driller:latest
           platforms: linux/amd64
