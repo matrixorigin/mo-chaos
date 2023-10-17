@@ -1,0 +1,14 @@
+name: Chaos Experiment
+
+on:
+  workflow_dispatch:
+    inputs:
+
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    container:
+      image: matrixorigin/mo-chaos-driller:latest
+    steps:
+      - name: Run
+        run: ''
