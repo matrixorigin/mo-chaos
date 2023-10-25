@@ -5,7 +5,7 @@ on:
 jobs:
   Explore-GitHub-Actions:
     # You need to use the INSTALLATION_NAME from the previous step
-    runs-on: arc-runner-set
+    runs-on: arc-runner-mo-chaos-driller
     container:
       image: matrixorigin/mo-chaos-driller:latest
     steps:
