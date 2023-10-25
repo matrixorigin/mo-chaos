@@ -1,0 +1,14 @@
+name: Actions Runner Controller Demo
+on:
+  workflow_dispatch:
+
+jobs:
+  Explore-GitHub-Actions:
+    # You need to use the INSTALLATION_NAME from the previous step
+    runs-on: arc-runner-set
+    container:
+      image: matrixorigin/mo-chaos-driller:latest
+    steps:
+      - run: ls
+      - run: pwd
+      - run: python --version
