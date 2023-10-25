@@ -1,4 +1,4 @@
-name: Actions Runner Controller Demo
+name: Run Chaos Experiment
 on:
   workflow_dispatch:
 defaults:
@@ -10,6 +10,6 @@ jobs:
     container:
       image: matrixorigin/mo-chaos-driller:latest
     steps:
-      - name: run
+      - name: Run
         run: pwd
       - run: ls
