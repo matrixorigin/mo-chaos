@@ -9,6 +9,7 @@ jobs:
     runs-on: arc-runner-mo-chaos-driller
     container:
       image: matrixorigin/mo-chaos-driller:latest
+      options: --pull always
     steps:
       - name: Run
         run: python main.py
