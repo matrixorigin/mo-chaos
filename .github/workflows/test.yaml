@@ -11,5 +11,4 @@ jobs:
       image: matrixorigin/mo-chaos-driller:latest
     steps:
       - name: Run
-        run: pwd
-      - run: ls
+        run: python main.py
