@@ -1,15 +1,15 @@
 name: Actions Runner Controller Demo
 on:
   workflow_dispatch:
-
+defaults:
+  run:
+    working-directory: /root
 jobs:
   Run-Chaos-Experiment:
     runs-on: arc-runner-mo-chaos-driller
     container:
       image: matrixorigin/mo-chaos-driller:latest
     steps:
-      - name: switch path
-        run: cd /root
       - name: run
         run: pwd
       - run: ls
