@@ -8,8 +8,7 @@ jobs:
   Run-Chaos-Experiment:
     runs-on: arc-runner-mo-chaos-driller
     container:
-      image: matrixorigin/mo-chaos-driller:latest
-      options: --pull always
+      image: matrixorigin/mo-chaos-driller:1.0.0-beta5
     steps:
       - name: Run
         run: python main.py
