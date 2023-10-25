@@ -3,12 +3,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  Explore-GitHub-Actions:
-    # You need to use the INSTALLATION_NAME from the previous step
+  Run-Chaos-Experiment:
     runs-on: arc-runner-mo-chaos-driller
     container:
       image: matrixorigin/mo-chaos-driller:latest
     steps:
+      - name: switch path
+        run: cd /root
+      - name: run
+        run: pwd
       - run: ls
-      - run: pwd
-      - run: python --version
