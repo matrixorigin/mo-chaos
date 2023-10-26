@@ -75,6 +75,5 @@ def get_workflow_run_stats(project_id: str, workflow_ids: List[str]) -> str:
                 }
             }
         }''', {"request": {'projectID': project_id, 'workflowIDs': workflow_ids}})
-    if len(res['listWorkflowRuns']['workflowRuns']) == 0:
-        raise IndexError('run stats not found')
-    return res['listWorkflowRuns']['workflowRuns'][0]['phase']
+    if len(res['listWorkflowRuns']['workflowRuns']) != 0:
+        return res['listWorkflowRuns']['workflowRuns'][0]['phase']
