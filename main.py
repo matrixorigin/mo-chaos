@@ -57,7 +57,7 @@ if __name__ == '__main__':
     while 1:
         try:
             phase = get_workflow_run_stats(project_id, [workflow_id])
-            if phase.lower() not in ['running', 'pending']:
+            if phase.lower() not in ['running', 'pending'] or phase != '':
                 print(f'{generated_name} ended at {datetime.now().ctime()}, status {phase}')
                 break
         except IndexError:
