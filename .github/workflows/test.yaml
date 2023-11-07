@@ -1,0 +1,14 @@
+name: Run Chaos Experiment
+on:
+  workflow_dispatch:
+defaults:
+  run:
+    working-directory: /root
+jobs:
+  Run-Chaos-Experiment:
+    runs-on: arc-runner-mo-chaos-driller
+    container:
+      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
+    steps:
+      - name: Run
+        run: python main.py

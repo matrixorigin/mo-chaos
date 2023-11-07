@@ -6,4 +6,5 @@ def get_auth_token(litmus_url: str, username: str, password: str) -> str:
         "username": username,
         "password": password
     }
-    return requests.post(f"http://{litmus_url}/auth/login", json=payload).json()["access_token"]
+    resp = requests.post(f"http://{litmus_url}/auth/login", json=payload)
+    return resp.json()["access_token"]

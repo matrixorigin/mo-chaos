@@ -55,7 +55,10 @@ if __name__ == '__main__':
 
     # fetch status until it's done
     while 1:
-        phase = get_workflow_run_stats(project_id, [workflow_id])
-        if phase.lower() not in ['running', 'pending']:
-            print(f'{generated_name} ended at {datetime.now().ctime()}, status {phase}')
-            break
+        try:
+            phase = get_workflow_run_stats(project_id, [workflow_id])
+            if phase.lower() not in ['running', 'pending'] or phase != '':
+                print(f'{generated_name} ended at {datetime.now().ctime()}, status {phase}')
+                break
+        except IndexError:
+            pass
