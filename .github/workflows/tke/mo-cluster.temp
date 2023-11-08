@@ -5,7 +5,7 @@ metadata:
 spec:
   dn:
     nodeSelector:
-      tke.matrixorigin.io/mo-checkin-regression: "true"
+      tke.matrixorigin.io/mo-checkin-regression: \"true\"
     overlay:
       tolerations:
         - effect: NoSchedule
@@ -13,7 +13,7 @@ spec:
           operator: Exists
       env:
         - name: GOMEMLIMIT
-          value: "8000MiB"
+          value: \"8000MiB\"
     cacheVolume:
       size: 100Gi
       storageClassName: cbs-hssd
@@ -22,20 +22,20 @@ spec:
       diskCacheSize: 100Gi
     config: |
       [dn.Txn.Storage]
-      backend = "TAE"
-      log-backend = "logservice"
+      backend = \"TAE\"
+      log-backend = \"logservice\"
       [dn.Ckp]
-      flush-interval = "60s"
+      flush-interval = \"60s\"
       min-count = 100
-      scan-interval = "5s"
-      incremental-interval = "60s"
-      global-interval = "100000s"
+      scan-interval = \"5s\"
+      incremental-interval = \"60s\"
+      global-interval = \"100000s\"
       [dn.LogtailServer]
-      rpc-max-message-size = "16KiB"
-      rpc-payload-copy-buffer-size = "16KiB"
+      rpc-max-message-size = \"16KiB\"
+      rpc-payload-copy-buffer-size = \"16KiB\"
       rpc-enable-checksum = true
-      logtail-collect-interval = "2ms"
-      logtail-response-send-timeout = "10s"
+      logtail-collect-interval = \"2ms\"
+      logtail-response-send-timeout = \"10s\"
       max-logtail-fetch-failure = 5
     replicas: 1
     resources:
@@ -48,7 +48,7 @@ spec:
   imageRepository: matrixorigin/matrixone
   logService:
     nodeSelector:
-      tke.matrixorigin.io/mo-checkin-regression-log: "true"
+      tke.matrixorigin.io/mo-checkin-regression-log: \"true\"
     overlay:
       tolerations:
         - effect: NoSchedule
@@ -76,8 +76,8 @@ spec:
       storageClassName: cbs-hssd
     config: |
       [log]
-      level = "info"
-      format = "json"
+      level = \"info\"
+      format = \"json\"
       max-size = 512
   tp:
     cacheVolume:
@@ -88,19 +88,19 @@ spec:
       diskCacheSize: 100Gi
     config: |
       [cn.Engine]
-      type = "distributed-tae"
+      type = \"distributed-tae\"
       [log]
-      level = "info"
-      format = "json"
+      level = \"info\"
+      format = \"json\"
       max-size = 512
       [cn.rpc]
       send-queue-size = 2
       busy-queue-size = 1
       [cn.ctl.address]
-      listen-address = "0.0.0.0:19958"
+      listen-address = \"0.0.0.0:19958\"
     replicas: 2
     nodeSelector:
-      tke.matrixorigin.io/mo-checkin-regression: "true"
+      tke.matrixorigin.io/mo-checkin-regression: \"true\"
     overlay:
       tolerations:
         - effect: NoSchedule
@@ -108,7 +108,7 @@ spec:
           operator: Exists
       env:
         - name: GOMEMLIMIT
-          value: "8000MiB"
+          value: \"8000MiB\"
     resources:
       requests:
         cpu: 7

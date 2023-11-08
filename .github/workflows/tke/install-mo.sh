@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 NAMESPACE=$1
 # create namespace
 kubectl create ns $NAMESPACE
