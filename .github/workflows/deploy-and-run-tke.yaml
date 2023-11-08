@@ -1,9 +1,6 @@
 name: Deploy Mo Cluster and Run Chaos Experiment on TKE
 on:
   workflow_dispatch:
-#defaults:
-#  run:
-#    working-directory: /root
 jobs:
   install-mo-cluster:
     runs-on: amd64-tke-dind
@@ -12,9 +9,9 @@ jobs:
       - name: Run install script
         run: |
            chmod +x .github/workflows/install-mo-tke.sh
-           .github/workflows/install-mo-tke.sh
+           .github/workflows/install-mo-tke.sh test-chaos
         shell: bash
       - uses: webiny/action-post-run@3.0.0
         id: cleanup
         with:
-          run: bash .github/workflows/clean-mo-tke.sh
+          run: bash .github/workflows/clean-mo-tke.sh test-chaos
