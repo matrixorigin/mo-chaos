@@ -11,7 +11,9 @@ jobs:
            chmod +x .github/workflows/install-mo-tke.sh
            .github/workflows/install-mo-tke.sh test-chaos
         shell: bash
-      - uses: webiny/action-post-run@3.0.0
-        id: cleanup
-        with:
-          run: bash .github/workflows/clean-mo-tke.sh test-chaos
+      - name: Cleanup
+        if: always()
+        run: |
+          chmod +x .github/workflows/clean-mo-tke.sh
+          .github/workflows/clean-mo-tke.sh test-chaos
+        shell: bash
