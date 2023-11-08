@@ -6,7 +6,7 @@ defaults:
     working-directory: /root
 jobs:
   install-mo-cluster:
-    runs-on: runner-mo-dind-4vk87-p9zzk
+    runs-on: amd64-tke-dind
     steps:
       - name: Run install script
         run: bash install-mo-tke.sh
