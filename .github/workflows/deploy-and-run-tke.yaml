@@ -8,5 +8,9 @@ jobs:
   install-mo-cluster:
     runs-on: amd64-tke-dind
     steps:
+      - uses: actions/checkout@v2
       - name: Run install script
-        run: bash install-mo-tke.sh
+        run: |
+           chmod +x .github/workflows/install-mo-tke.sh
+           .github/workflows/install-mo-tke.sh
+        shell: bash
