@@ -35,8 +35,8 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: mo-cluster.yaml
-#      - run: |
-#          chmod +x .github/workflows/tke/clean-mo.sh
-#          .github/workflows/tke/clean-mo.sh test-chaos
-#        shell: bash
+      - run: |
+          chmod +x .github/workflows/tke/clean-mo.sh
+          .github/workflows/tke/clean-mo.sh test-chaos
+        shell: bash
       - run: ls
