@@ -2,7 +2,7 @@ name: Deploy Mo Cluster and Run Chaos Experiment on TKE
 on:
   workflow_dispatch:
 jobs:
-  install-mo-cluster:
+  deploy:
     runs-on: amd64-tke-dind
     steps:
       - uses: actions/checkout@v2
@@ -17,3 +17,10 @@ jobs:
           chmod +x .github/workflows/tke/clean-mo.sh
           .github/workflows/tke/clean-mo.sh test-chaos
         shell: bash
+  run:
+    runs-on: amd64-tke-dind
+    container:
+      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
+    steps:
+      - name: Run
+        run: ls
