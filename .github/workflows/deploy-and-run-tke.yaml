@@ -1,9 +1,9 @@
 name: Deploy Mo Cluster and Run Chaos Experiment on TKE
 on:
   workflow_dispatch:
-defaults:
-  run:
-    working-directory: /root
+#defaults:
+#  run:
+#    working-directory: /root
 jobs:
   install-mo-cluster:
     runs-on: amd64-tke-dind
