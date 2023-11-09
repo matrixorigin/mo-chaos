@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 uuid=$(cat /proc/sys/kernel/random/uuid)
-echo uuid > uuid
+echo $uuid > uuid
 NAMESPACE=chaos-$uuid
 # create namespace
 #kubectl create ns $NAMESPACE
