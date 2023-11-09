@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-sleep infinity
+ls
 uuid=$(cat uuid)
 NAMESPACE=chaos-$uuid
 # remove mo clusterr
