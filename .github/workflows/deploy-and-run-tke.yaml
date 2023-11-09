@@ -36,7 +36,7 @@ jobs:
           path: .
       - run: |
           set -e
-          sleep 60
+          sleep 120
           NAMESPACE=chaos-$(cat uuid)
           cd /root
           python main.py
