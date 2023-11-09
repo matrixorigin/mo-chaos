@@ -16,20 +16,21 @@ jobs:
         with:
           name: mo-cluster.yaml
           path: mo-cluster.yaml
-#  run-chaos:
-#    runs-on: amd64-tke-dind
-#    needs:
-#      - deploy
-#    container:
-#      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
-#    steps:
-#      - run: ls
+# todo bvt_test
+  run-chaos:
+    runs-on: amd64-tke-dind
+    needs:
+      - deploy
+    container:
+      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
+    steps:
+      - run: ls
   cleanup:
     runs-on: amd64-tke-dind
     if: always()
     needs:
       - deploy
-#      - run-chaos
+      - run-chaos
     steps:
       - uses: actions/checkout@v2
       - name: Download mo cluster yaml
