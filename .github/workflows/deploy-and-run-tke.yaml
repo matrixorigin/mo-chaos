@@ -7,6 +7,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Deploy
+        env:
+          COS_AK: ${{ secrets.COS_AK }}
+          COS_SK: ${{ secrets.COS_SK }}
         run: |
           chmod +x .github/workflows/tke/install-mo.sh
           .github/workflows/tke/install-mo.sh
@@ -35,6 +38,7 @@ jobs:
           set -e
           sleep 60
           NAMESPACE=chaos-$(cat uuid)
+          cd /root
           python main.py
         name: Run
   Cleanup:
