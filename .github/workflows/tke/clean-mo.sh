@@ -4,7 +4,7 @@ set -e
 ls
 pwd
 env
-uuid=$(cat uuid)
+uuid=$(cat $GITHUB_WORKSPACE/uuid)
 NAMESPACE=chaos-$uuid
 # remove mo clusterr
 echo "kubectl delete -f mo-cluster.yaml -n $NAMESPACE"
