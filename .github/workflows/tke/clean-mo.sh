@@ -1,9 +1,6 @@
 #!/bin/sh
 set -e
 
-ls
-pwd
-env
 uuid=$(cat $GITHUB_WORKSPACE/uuid)
 NAMESPACE=chaos-$uuid
 # remove mo clusterr
