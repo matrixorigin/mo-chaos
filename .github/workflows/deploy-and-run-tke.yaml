@@ -19,21 +19,30 @@ jobs:
             mo-cluster.yaml
             uuid
 # todo bvt_test
-#  Run-Chaos:
-#    runs-on: amd64-tke-dind
-#    needs:
-#      - deploy
-#    container:
-#      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
-#    steps:
-#      - run: python main.py
-#        name: Run
+  Run-Chaos:
+    runs-on: amd64-tke-dind
+    needs:
+      - deploy
+    container:
+      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
+    steps:
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
+      - run: |
+          set -e
+          NAMESPACE=chaos-$(cat uuid)
+          cat $NAMESPACE
+#          python main.py
+        name: Run
   Cleanup:
     runs-on: amd64-tke-dind
     if: always()
     needs:
       - Deploy
-#      - Run-Chaos
+      - Run-Chaos
     steps:
       - uses: actions/checkout@v2
       - name: Download mo cluster artifact
