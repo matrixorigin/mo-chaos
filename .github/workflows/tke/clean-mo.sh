@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
-NAMESPACE=$1
+uuid=$(cat uuid)
+NAMESPACE=chaos-$uuid
 # remove mo clusterr
 kubectl delete -f mo-cluster.yaml -n $NAMESPACE
 # delete namespace
