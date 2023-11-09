@@ -3,6 +3,7 @@ set -e
 
 ls
 pwd
+env
 uuid=$(cat uuid)
 NAMESPACE=chaos-$uuid
 # remove mo clusterr
