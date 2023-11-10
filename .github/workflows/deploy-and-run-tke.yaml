@@ -21,9 +21,56 @@ jobs:
           path: |
             mo-cluster.yaml
             uuid
-# todo bvt_test
+#  bvt_test:
+#    if: ${{ always() && !cancelled() && needs.setup_mo_test_env.result == 'success' }}
+#    name: MO CHECKIN BVT TEST
+#    runs-on: amd64-tke-mo
+#    needs:
+#      - Deploy
+#    steps:
+#      - name: Clone MO-Tester
+#        if: ${{ always() && !cancelled() }}
+#        uses: actions/checkout@v3
+#        with:
+#          repository: matrixorigin/mo-tester
+#          token: ${{secrets.TOKEN_ACTION}}
+#          path: ./mo-tester
+#          ref: main
+#      - name: Clone matrixone Repo
+#        if: ${{ always() && !cancelled() }}
+#        uses: actions/checkout@v3
+#        with:
+#          path: ./matrixone
+#      - name: Download mo cluster artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: .
+#      - name: Set JAVA PATH
+#        run: |
+#          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
+#      - name: Generate MO-Tester Config and Start BVT Test
+#        if: ${{ always() && !cancelled() }}
+#        timeout-minutes: 20
+#        run: |
+#          uuid=$(cat uuid)
+#          NAMESPACE=chaos-$uuid
+#          export LC_ALL="C.UTF-8"
+#          locale
+#          sed -i "s/127.0.0.1:6001/${{ needs.setup_mo_test_env.outputs.mo_svc_ip }}:6001/" ./mo-tester/mo.yml
+#          sed -i 's/socketTimeout:.*/socketTimeout: 300000/g' ./mo-tester/mo.yml
+#          sed -i 's/  serverIP: "127.0.0.1"/  serverIP: "${{ needs.setup_mo_test_env.outputs.cn_ips }}"/g' ./mo-tester/mo.yml
+#          sed -i 's/waittime:.*/waittime: 2000/g' ./mo-tester/run.yml
+#          cat ./mo-tester/mo.yml
+#          echo "=========================="
+#          cat ./mo-tester/run.yml
+#          echo "=========================="
+#
+#          cd $GITHUB_WORKSPACE/mo-tester
+#          ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s /matrixone/test/distributed/resources -e optimistic  2>&1
+#          rm -rf .git lib
   Run-Chaos:
-    runs-on: amd64-tke-dind
+    runs-on: amd64-tke-mo
     needs:
       - deploy
     container:
