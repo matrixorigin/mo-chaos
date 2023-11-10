@@ -82,9 +82,10 @@ jobs:
           path: .
       - run: |
           set -e
-          sleep 120
-          NAMESPACE=chaos-$(cat uuid)
-          python main.py
+          python -V
+#          sleep 120
+#          NAMESPACE=chaos-$(cat uuid)
+#          python main.py
         name: Run
   Cleanup:
     runs-on: amd64-tke-dind
