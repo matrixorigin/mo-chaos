@@ -11,6 +11,7 @@ jobs:
           COS_AK: ${{ secrets.COS_AK }}
           COS_SK: ${{ secrets.COS_SK }}
         run: |
+          env
           chmod +x .github/workflows/tke/install-mo.sh
           .github/workflows/tke/install-mo.sh
         shell: bash
@@ -70,7 +71,7 @@ jobs:
 #          ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s /matrixone/test/distributed/resources -e optimistic  2>&1
 #          rm -rf .git lib
   Run-Chaos:
-    runs-on: amd64-tke-mo
+    runs-on: amd64-tke-dind
     needs:
       - deploy
     steps:
