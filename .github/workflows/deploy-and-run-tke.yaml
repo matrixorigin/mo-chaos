@@ -82,10 +82,11 @@ jobs:
           path: .
       - run: |
           set -e
-          python -V
-#          sleep 120
-#          NAMESPACE=chaos-$(cat uuid)
-#          python main.py
+          sleep 120
+          kubectl .github/workflows/job.yaml
+          uuid=$(cat uuid)
+          NAMESPACE=chaos-$uuid
+          kubectl logs -f job.batch/run -n $NAMESPACE
         name: Run
   Cleanup:
     runs-on: amd64-tke-dind
