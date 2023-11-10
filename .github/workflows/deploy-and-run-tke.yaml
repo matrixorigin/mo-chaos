@@ -83,7 +83,7 @@ jobs:
       - run: |
           set -e
           sleep 120
-          kubectl .github/workflows/job.yaml
+          kubectl .github/workflows/tke/cn-pod-delete-job.yaml
           uuid=$(cat uuid)
           NAMESPACE=chaos-$uuid
           kubectl logs -f job.batch/run -n $NAMESPACE
