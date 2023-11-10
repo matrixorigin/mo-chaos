@@ -73,8 +73,6 @@ jobs:
     runs-on: amd64-tke-mo
     needs:
       - deploy
-    container:
-      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
     steps:
       - name: Download mo cluster artifact
         uses: actions/download-artifact@v3
