@@ -83,7 +83,6 @@ jobs:
           set -e
           sleep 120
           NAMESPACE=chaos-$(cat uuid)
-          cd /root
           python main.py
         name: Run
   Cleanup:
