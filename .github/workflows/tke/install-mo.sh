@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
-name=$(cat /dev/urandom | tr -cd 'a-zA-Z' | head -c 16)
+pfx=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 1)
+sfx=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 15)
+name=$pfx$sfx
 echo $name > name
 NAMESPACE=chaos-$name
 # create namespace
