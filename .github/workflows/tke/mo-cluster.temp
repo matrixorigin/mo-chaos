@@ -67,6 +67,7 @@ spec:
         path: mo-chaos-tke-1308875761
         region: ap-chengdu
         endpoint: https://cos.ap-chengdu.myqcloud.com
+        s3RetentionPolicy: Delete
         secretRef:
           name: tencent-token
     pvcRetentionPolicy: Delete
