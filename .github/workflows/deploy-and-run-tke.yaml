@@ -19,56 +19,69 @@ jobs:
         with:
           name: mo-cluster
           path: |
-            mo-cluster.yaml
             uuid
-#  bvt_test:
-#    if: ${{ always() && !cancelled() && needs.setup_mo_test_env.result == 'success' }}
-#    name: MO CHECKIN BVT TEST
-#    runs-on: amd64-tke-mo
-#    needs:
-#      - Deploy
-#    steps:
-#      - name: Clone MO-Tester
-#        if: ${{ always() && !cancelled() }}
-#        uses: actions/checkout@v3
-#        with:
-#          repository: matrixorigin/mo-tester
-#          token: ${{secrets.TOKEN_ACTION}}
-#          path: ./mo-tester
-#          ref: main
-#      - name: Clone matrixone Repo
-#        if: ${{ always() && !cancelled() }}
-#        uses: actions/checkout@v3
-#        with:
-#          path: ./matrixone
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
-#      - name: Set JAVA PATH
-#        run: |
-#          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
-#      - name: Generate MO-Tester Config and Start BVT Test
-#        if: ${{ always() && !cancelled() }}
-#        timeout-minutes: 20
-#        run: |
-#          uuid=$(cat uuid)
-#          NAMESPACE=chaos-$uuid
-#          export LC_ALL="C.UTF-8"
-#          locale
-#          sed -i "s/127.0.0.1:6001/${{ needs.setup_mo_test_env.outputs.mo_svc_ip }}:6001/" ./mo-tester/mo.yml
-#          sed -i 's/socketTimeout:.*/socketTimeout: 300000/g' ./mo-tester/mo.yml
-#          sed -i 's/  serverIP: "127.0.0.1"/  serverIP: "${{ needs.setup_mo_test_env.outputs.cn_ips }}"/g' ./mo-tester/mo.yml
-#          sed -i 's/waittime:.*/waittime: 2000/g' ./mo-tester/run.yml
-#          cat ./mo-tester/mo.yml
-#          echo "=========================="
-#          cat ./mo-tester/run.yml
-#          echo "=========================="
-#
-#          cd $GITHUB_WORKSPACE/mo-tester
-#          ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s /matrixone/test/distributed/resources -e optimistic  2>&1
-#          rm -rf .git lib
+  Wait-Until-Ready:
+    runs-on: amd64-tke-dind
+    steps:
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
+      - name: Wait
+        run: |
+          set -e
+          uuid=$(cat uuid)
+          NAMESPACE=chaos-$uuid
+          kubectl wait --for=condition=ready pod --selector=matrixorigin.io/component=CNSet --timeout=-1s -n $NAMESPACE
+  #  bvt_test:
+  #    if: ${{ always() && !cancelled() && needs.setup_mo_test_env.result == 'success' }}
+  #    name: MO CHECKIN BVT TEST
+  #    runs-on: amd64-tke-mo
+  #    needs:
+  #      - Deploy
+  #    steps:
+  #      - name: Clone MO-Tester
+  #        if: ${{ always() && !cancelled() }}
+  #        uses: actions/checkout@v3
+  #        with:
+  #          repository: matrixorigin/mo-tester
+  #          token: ${{secrets.TOKEN_ACTION}}
+  #          path: ./mo-tester
+  #          ref: main
+  #      - name: Clone matrixone Repo
+  #        if: ${{ always() && !cancelled() }}
+  #        uses: actions/checkout@v3
+  #        with:
+  #          path: ./matrixone
+  #      - name: Download mo cluster artifact
+  #        uses: actions/download-artifact@v3
+  #        with:
+  #          name: mo-cluster
+  #          path: .
+  #      - name: Set JAVA PATH
+  #        run: |
+  #          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
+  #      - name: Generate MO-Tester Config and Start BVT Test
+  #        if: ${{ always() && !cancelled() }}
+  #        timeout-minutes: 20
+  #        run: |
+  #          uuid=$(cat uuid)
+  #          NAMESPACE=chaos-$uuid
+  #          export LC_ALL="C.UTF-8"
+  #          locale
+  #          sed -i "s/127.0.0.1:6001/${{ needs.setup_mo_test_env.outputs.mo_svc_ip }}:6001/" ./mo-tester/mo.yml
+  #          sed -i 's/socketTimeout:.*/socketTimeout: 300000/g' ./mo-tester/mo.yml
+  #          sed -i 's/  serverIP: "127.0.0.1"/  serverIP: "${{ needs.setup_mo_test_env.outputs.cn_ips }}"/g' ./mo-tester/mo.yml
+  #          sed -i 's/waittime:.*/waittime: 2000/g' ./mo-tester/run.yml
+  #          cat ./mo-tester/mo.yml
+  #          echo "=========================="
+  #          cat ./mo-tester/run.yml
+  #          echo "=========================="
+  #
+  #          cd $GITHUB_WORKSPACE/mo-tester
+  #          ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s /matrixone/test/distributed/resources -e optimistic  2>&1
+  #          rm -rf .git lib
   Run-Chaos:
     runs-on: amd64-tke-dind
     needs:
@@ -82,10 +95,10 @@ jobs:
           path: .
       - run: |
           set -e
-          sleep 120
           uuid=$(cat uuid)
           NAMESPACE=chaos-$uuid
           kubectl apply -f .github/workflows/tke/cn-pod-delete-job.yaml -n $NAMESPACE
+          sleep 3
           kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
           kubectl logs -f job.batch/run -n $NAMESPACE
         name: Run
@@ -104,6 +117,6 @@ jobs:
           path: .
       - name: Cleanup
         run: |
-#          chmod +x .github/workflows/tke/clean-mo.sh
-#          .github/workflows/tke/clean-mo.sh
+          chmod +x .github/workflows/tke/clean-mo.sh
+          .github/workflows/tke/clean-mo.sh
         shell: bash
