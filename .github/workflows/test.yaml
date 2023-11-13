@@ -1,14 +1,21 @@
-name: Run Chaos Experiment
+name: Just for Test
 on:
   workflow_dispatch:
-defaults:
-  run:
-    working-directory: /root
 jobs:
-  Run-Chaos-Experiment:
-    runs-on: arc-runner-mo-chaos-driller
-    container:
-      image: matrixorigin/mo-chaos-driller:1.0.0-beta9
+  Run-Chaos:
+    runs-on: amd64-tke-dind
+    needs:
+      - Wait-Until-Ready
     steps:
-      - name: Run
-        run: python main.py
+      - uses: actions/checkout@v2
+      - run: |
+          set -e
+          name=wz81zigr4jxie6pj
+          NAMESPACE=chaos-$name
+          kubectl apply -f .github/workflows/tke/cn-pod-delete-job.yaml -n $NAMESPACE
+          until kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
+          do
+              sleep 5
+          done
+          kubectl logs -f job.batch/run -n $NAMESPACE
+        name: Run
