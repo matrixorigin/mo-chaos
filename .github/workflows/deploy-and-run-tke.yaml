@@ -2,7 +2,7 @@ name: Deploy Mo Cluster and Run Chaos Experiment on TKE
 on:
   workflow_dispatch:
 jobs:
-  Deploy:
+#  Deploy:
 #    runs-on: amd64-tke-dind
 #    steps:
 #      - uses: actions/checkout@v2
