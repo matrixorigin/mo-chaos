@@ -103,8 +103,10 @@ jobs:
           name=$(cat name)
           NAMESPACE=chaos-$name
           kubectl apply -f .github/workflows/tke/cn-pod-delete-job.yaml -n $NAMESPACE
-          sleep 3
-          kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
+          until kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
+          do
+              sleep 5
+          done
           kubectl logs -f job.batch/run -n $NAMESPACE
         name: Run
   Cleanup:
@@ -122,6 +124,6 @@ jobs:
           path: .
       - name: Cleanup
         run: |
-          chmod +x .github/workflows/tke/clean-mo.sh
-          .github/workflows/tke/clean-mo.sh
+#          chmod +x .github/workflows/tke/clean-mo.sh
+#          .github/workflows/tke/clean-mo.sh
         shell: bash
