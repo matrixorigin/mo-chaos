@@ -13,4 +13,4 @@ spec:
           - "main.py"
       restartPolicy: Never
   backoffLimit: 0
-  ttlSecondsAfterFinished: 5
+#  ttlSecondsAfterFinished: 5
