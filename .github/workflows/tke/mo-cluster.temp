@@ -1,7 +1,7 @@
 apiVersion: core.matrixorigin.io/v1alpha1
 kind: MatrixOneCluster
 metadata:
-  name: $appName
+  name: chaos
 spec:
   dn:
     nodeSelector:
