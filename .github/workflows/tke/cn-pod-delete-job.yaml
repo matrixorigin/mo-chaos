@@ -7,10 +7,10 @@ spec:
     spec:
       containers:
       - name: run
-        image: matrixorigin/mo-chaos-driller:1.0.0-beta10
+        image: matrixorigin/mo-chaos-driller:1.0.0-beta11
         command:
           - "python"
           - "main.py"
       restartPolicy: Never
   backoffLimit: 0
-#  ttlSecondsAfterFinished: 5
+  ttlSecondsAfterFinished: 5
