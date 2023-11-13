@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
-pfx=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 1)
-sfx=$(cat /dev/urandom | tr -cd 'a-zA-Z0-9' | head -c 15)
+pfx=$(cat /dev/urandom | tr -dc 'a-z' | head -c 1)
+sfx=$(cat /dev/urandom | tr -cd 'a-z0-9' | head -c 15)
 name=$pfx$sfx
 echo $name > name
 NAMESPACE=chaos-$name
