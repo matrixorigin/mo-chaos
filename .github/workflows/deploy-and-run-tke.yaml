@@ -35,7 +35,10 @@ jobs:
           set -e
           name=$(cat name)
           NAMESPACE=chaos-$name
-          kubectl wait --for=condition=ready pod --selector=matrixorigin.io/component=CNSet --timeout=-1s -n $NAMESPACE
+          until kubectl wait --for=condition=ready pod --selector=matrixorigin.io/component=CNSet --timeout=-1s -n $NAMESPACE
+          do
+              sleep 5
+          done
   #  bvt_test:
   #    if: ${{ always() && !cancelled() && needs.setup_mo_test_env.result == 'success' }}
   #    name: MO CHECKIN BVT TEST
