@@ -19,7 +19,7 @@ jobs:
         with:
           name: mo-cluster
           path: |
-            uuid
+            name
   Wait-Until-Ready:
     runs-on: amd64-tke-dind
     steps:
@@ -31,8 +31,8 @@ jobs:
       - name: Wait
         run: |
           set -e
-          uuid=$(cat uuid)
-          NAMESPACE=chaos-$uuid
+          name=$(cat name)
+          NAMESPACE=chaos-$name
           kubectl wait --for=condition=ready pod --selector=matrixorigin.io/component=CNSet --timeout=-1s -n $NAMESPACE
   #  bvt_test:
   #    if: ${{ always() && !cancelled() && needs.setup_mo_test_env.result == 'success' }}
@@ -66,8 +66,8 @@ jobs:
   #        if: ${{ always() && !cancelled() }}
   #        timeout-minutes: 20
   #        run: |
-  #          uuid=$(cat uuid)
-  #          NAMESPACE=chaos-$uuid
+  #          name=$(cat name)
+  #          NAMESPACE=chaos-$name
   #          export LC_ALL="C.UTF-8"
   #          locale
   #          sed -i "s/127.0.0.1:6001/${{ needs.setup_mo_test_env.outputs.mo_svc_ip }}:6001/" ./mo-tester/mo.yml
@@ -95,8 +95,8 @@ jobs:
           path: .
       - run: |
           set -e
-          uuid=$(cat uuid)
-          NAMESPACE=chaos-$uuid
+          name=$(cat name)
+          NAMESPACE=chaos-$name
           kubectl apply -f .github/workflows/tke/cn-pod-delete-job.yaml -n $NAMESPACE
           sleep 3
           kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
