@@ -7,14 +7,12 @@ jobs:
     runs-on: amd64-tke-mo
     steps:
       - name: Clone MO-Tester
-        if: ${{ always() && !cancelled() }}
         uses: actions/checkout@v3
         with:
           repository: matrixorigin/mo-tester
           path: ./mo-tester
           ref: main
       - name: Clone matrixone Repo
-        if: ${{ always() && !cancelled() }}
         uses: actions/checkout@v3
         with:
           repository: matrixorigin/matrixone
@@ -29,7 +27,6 @@ jobs:
         run: |
           echo "$JAVA_HOME/bin" >> $GITHUB_PATH
       - name: Generate MO-Tester Config and Start BVT Test
-        if: ${{ always() && !cancelled() }}
         timeout-minutes: 20
         run: |
           name=cbhufqauf1n8p599
