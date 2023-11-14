@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
 jobs:
   bvt_test:
-    if: ${{ always() && !cancelled() && needs.setup_mo_test_env.result == 'success' }}
     name: MO CHECKIN BVT TEST
     runs-on: amd64-tke-mo
     steps:
