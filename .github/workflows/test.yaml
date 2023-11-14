@@ -29,6 +29,8 @@ jobs:
       - name: Generate MO-Tester Config and Start BVT Test
         timeout-minutes: 20
         run: |
+          pwd
+          ls
           name=cbhufqauf1n8p599
           NAMESPACE=chaos-$name
           export LC_ALL="C.UTF-8"
