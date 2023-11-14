@@ -2,15 +2,48 @@ name: Just for Test
 on:
   workflow_dispatch:
 jobs:
-  Deploy:
-    runs-on: amd64-tke-dind
+  bvt_test:
+    if: ${{ always() && !cancelled() && needs.setup_mo_test_env.result == 'success' }}
+    name: MO CHECKIN BVT TEST
+    runs-on: amd64-tke-mo
     steps:
-      - uses: actions/checkout@v2
-      - name: Deploy
-        env:
-          COS_AK: ${{ secrets.COS_AK }}
-          COS_SK: ${{ secrets.COS_SK }}
+      - name: Clone MO-Tester
+        if: ${{ always() && !cancelled() }}
+        uses: actions/checkout@v3
+        with:
+          repository: matrixorigin/mo-tester
+          token: ${{secrets.TOKEN_ACTION}}
+          path: ./mo-tester
+          ref: main
+      - name: Clone matrixone Repo
+        if: ${{ always() && !cancelled() }}
+        uses: actions/checkout@v3
+        with:
+          path: ./matrixone
+#      - name: Download mo cluster artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: .
+      - name: Set JAVA PATH
         run: |
-          chmod +x .github/workflows/tke/install-mo.sh
-          .github/workflows/tke/install-mo.sh
-        shell: bash
+          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
+      - name: Generate MO-Tester Config and Start BVT Test
+        if: ${{ always() && !cancelled() }}
+        timeout-minutes: 20
+        run: |
+          name=cbhufqauf1n8p599
+          NAMESPACE=chaos-$name
+          export LC_ALL="C.UTF-8"
+          locale
+          sed -i "s/127.0.0.1:6001/$name-tp-cn.$NAMESPACE:6001/" ./mo-tester/mo.yml
+          sed -i 's/socketTimeout:.*/socketTimeout: 300000/g' ./mo-tester/mo.yml
+          sed -i 's/waittime:.*/waittime: 2000/g' ./mo-tester/run.yml
+          cat ./mo-tester/mo.yml
+          echo "=========================="
+          cat ./mo-tester/run.yml
+          echo "=========================="
+          
+          cd $GITHUB_WORKSPACE/mo-tester
+          ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s /matrixone/test/distributed/resources -e optimistic  2>&1
+          rm -rf .git lib
