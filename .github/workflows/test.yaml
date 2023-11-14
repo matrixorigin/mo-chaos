@@ -11,14 +11,15 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: matrixorigin/mo-tester
-          token: ${{secrets.TOKEN_ACTION}}
           path: ./mo-tester
           ref: main
       - name: Clone matrixone Repo
         if: ${{ always() && !cancelled() }}
         uses: actions/checkout@v3
         with:
-          path: ./matrixone
+          repository: matrixorigin/matrixone
+          ref: main
+          path: .
 #      - name: Download mo cluster artifact
 #        uses: actions/download-artifact@v3
 #        with:
