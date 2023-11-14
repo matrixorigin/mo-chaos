@@ -2,18 +2,15 @@ name: Just for Test
 on:
   workflow_dispatch:
 jobs:
-  Run-Chaos:
+  Deploy:
     runs-on: amd64-tke-dind
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          set -e
-          name=wz81zigr4jxie6pj
-          NAMESPACE=chaos-$name
-          kubectl apply -f .github/workflows/tke/cn-pod-delete-job.yaml -n $NAMESPACE
-          until kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
-          do
-              sleep 5
-          done
-          kubectl logs -f job.batch/run -n $NAMESPACE
-        name: Run
+      - name: Deploy
+        env:
+          COS_AK: ${{ secrets.COS_AK }}
+          COS_SK: ${{ secrets.COS_SK }}
+        run: |
+          chmod +x .github/workflows/tke/install-mo.sh
+          .github/workflows/tke/install-mo.sh
+        shell: bash
