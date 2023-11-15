@@ -32,13 +32,9 @@ jobs:
           path: .
       - name: Wait
         run: |
-          set -e
-          name=$(cat name)
-          NAMESPACE=chaos-$name
-          until kubectl wait --for=condition=ready pod --selector=matrixorigin.io/component=CNSet --timeout=-1s -n $NAMESPACE
-          do
-              sleep 5
-          done
+          chmod +x .github/workflows/tke/wait.sh
+          .github/workflows/tke/wait.sh
+        shell: bash
   bvt_test:
     name: MO CHECKIN BVT TEST
     runs-on: amd64-tke-mo
@@ -68,21 +64,9 @@ jobs:
       - name: Generate MO-Tester Config and Start BVT Test
         timeout-minutes: 20
         run: |
-          name=$(cat name)
-          NAMESPACE=chaos-$name
-          export LC_ALL="C.UTF-8"
-          locale
-          sed -i "s/127.0.0.1:6001/$name-tp-cn.$NAMESPACE:6001/" ./mo-tester/mo.yml
-          sed -i 's/socketTimeout:.*/socketTimeout: 300000/g' ./mo-tester/mo.yml
-          sed -i 's/waittime:.*/waittime: 2000/g' ./mo-tester/run.yml
-          cat ./mo-tester/mo.yml
-          echo "=========================="
-          cat ./mo-tester/run.yml
-          echo "=========================="
-          
-          cd $GITHUB_WORKSPACE/mo-tester
-          ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s $GITHUB_WORKSPACE/matrixone/test/distributed/resources -e optimistic  2>&1
-          rm -rf .git lib
+          chmod +x .github/workflows/tke/run-test.sh
+          .github/workflows/tke/run-test.sh
+        shell: bash
   Run-Chaos:
     runs-on: amd64-tke-dind
     needs:
@@ -95,15 +79,9 @@ jobs:
           name: mo-cluster
           path: .
       - run: |
-          set -e
-          name=$(cat name)
-          NAMESPACE=chaos-$name
-          kubectl apply -f .github/workflows/tke/cn-pod-delete-job.yaml -n $NAMESPACE
-          until kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
-          do
-              sleep 5
-          done
-          kubectl logs -f job.batch/run -n $NAMESPACE
+          chmod +x .github/workflows/tke/run-chaos.sh
+          .github/workflows/tke/run-chaos.sh
+        shell: bash
         name: Run
   Cleanup:
     runs-on: amd64-tke-dind
