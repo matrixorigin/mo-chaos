@@ -12,7 +12,18 @@ kubectl create secret generic tencent-token -n $NAMESPACE --from-literal=AWS_ACC
 
 # create mo cluster file
 appName=$name
-imageTag=$(curl https://hub.docker.com/v2/namespaces/matrixorigin/repositories/matrixone/tags|jq -r '.results[0].name')
+curl https://hub.docker.com/v2/namespaces/matrixorigin/repositories/matrixone/tags > tags
+idx=0
+while [ 1 ]
+do
+  if [[ $(cat tags|jq -r ".results[$idx].name") != "latest" ]]; then
+    imageTag=$(cat tags|jq -r ".results[$idx].name")
+    break
+  else
+    idx=$((idx+1))
+  fi
+  sleep 1
+done
 eval "echo \"$(cat .github/workflows/tke/mo-cluster.temp)\""
 eval "echo \"$(cat .github/workflows/tke/mo-cluster.temp)\"" > mo-cluster.yaml
 # create mo cluster
