@@ -12,4 +12,4 @@ cat ./mo-tester/run.yml
 echo "=========================="
 
 cd $GITHUB_WORKSPACE/mo-tester
-./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s $GITHUB_WORKSPACE/matrixone/test/distributed/resources -e optimistic  2>&1
+./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -e optimistic  2>&1
