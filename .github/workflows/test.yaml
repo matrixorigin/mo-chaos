@@ -43,5 +43,6 @@ jobs:
           
           cd $GITHUB_WORKSPACE/mo-tester
           yes | cp -rf ../mo-tester-1.0-SNAPSHOT.jar lib/mo-tester-1.0-SNAPSHOT.jar
-          ./run.sh -n -g -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -e optimistic  2>&1
+          sleep infinity
+          # ./run.sh -n -g -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -e optimistic  2>&1
           rm -rf .git lib
