@@ -6,6 +6,7 @@ jobs:
     name: MO CHECKIN BVT TEST
     runs-on: amd64-tke-mo
     steps:
+      - uses: actions/checkout@v4
       - name: Clone MO-Tester
         uses: actions/checkout@v3
         with:
@@ -41,6 +42,6 @@ jobs:
           echo "=========================="
           
           cd $GITHUB_WORKSPACE/mo-tester
-          sleep infinity
+          yes | cp -rf ../mo-tester-1.0-SNAPSHOT.jar lib/mo-tester-1.0-SNAPSHOT.jar
           ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -e optimistic  2>&1
           rm -rf .git lib
