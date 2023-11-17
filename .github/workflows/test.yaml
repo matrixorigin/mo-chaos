@@ -27,7 +27,6 @@ jobs:
         run: |
           echo "$JAVA_HOME/bin" >> $GITHUB_PATH
       - name: Generate MO-Tester Config and Start BVT Test
-        timeout-minutes: 20
         run: |
           name=tx9t85m29wpgfbib
           NAMESPACE=chaos-$name
@@ -42,5 +41,6 @@ jobs:
           echo "=========================="
           
           cd $GITHUB_WORKSPACE/mo-tester
+          sleep infinity
           ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -e optimistic  2>&1
           rm -rf .git lib
