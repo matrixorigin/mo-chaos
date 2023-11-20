@@ -275,7 +275,7 @@ jobs:
       - name: Load TPCC 10 Warehouse Data
         if: ${{ always() && !cancelled() }}
         run: |
-          name=nj68d1pmjlbkyuu4
+          name=c7y34eqgtf8qw9dq
           NAMESPACE=chaos-$name
           export LC_ALL="C.UTF-8"
           locale
