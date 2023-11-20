@@ -2,56 +2,57 @@ name: Just for Test
 on:
   workflow_dispatch:
 jobs:
-  Deploy:
-    runs-on: amd64-tke-dind
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy
-        env:
-          COS_AK: ${{ secrets.COS_AK }}
-          COS_SK: ${{ secrets.COS_SK }}
-        run: |
-          chmod +x .github/workflows/tke/install-mo.sh
-          .github/workflows/tke/install-mo.sh
-        shell: bash
-      - name: Upload mo cluster artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: mo-cluster
-          path: |
-            name
-  Wait-Until-Ready:
-    runs-on: amd64-tke-dind
-    needs:
-      - Deploy
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download mo cluster artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: mo-cluster
-          path: .
-      - name: Wait
-        run: |
-          chmod +x .github/workflows/tke/wait.sh
-          .github/workflows/tke/wait.sh
-        shell: bash
-  Prepare-Cn-Data:
-    runs-on: amd64-tke-dind
-    needs:
-      - Wait-Until-Ready
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download mo cluster artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: mo-cluster
-          path: .
-      - name: Clone Data
-        run: |
-          chmod +x .github/workflows/tke/prepare-cn-data.sh
-          .github/workflows/tke/prepare-cn-data.sh
-        shell: bash
+#  Deploy:
+#    runs-on: amd64-tke-dind
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Deploy
+#        env:
+#          COS_AK: ${{ secrets.COS_AK }}
+#          COS_SK: ${{ secrets.COS_SK }}
+#        run: |
+#          chmod +x .github/workflows/tke/install-mo.sh
+#          .github/workflows/tke/install-mo.sh
+#        shell: bash
+#      - name: Upload mo cluster artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: |
+#            name
+#  Wait-Until-Ready:
+#    runs-on: amd64-tke-dind
+#    needs:
+#      - Deploy
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Download mo cluster artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: .
+#      - name: Wait
+#        run: |
+#          chmod +x .github/workflows/tke/wait.sh
+#          .github/workflows/tke/wait.sh
+#        shell: bash
+#  Prepare-Cn-Data:
+#    runs-on: amd64-tke-dind
+#    needs:
+#      - Wait-Until-Ready
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Download mo cluster artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: .
+#      - name: Clone Data
+#        run: |
+#          chmod +x .github/workflows/tke/prepare-cn-data.sh
+#          .github/workflows/tke/prepare-cn-data.sh
+#        shell: bash
+
 #  bvt_test:
 #    name: MO CHECKIN BVT TEST
 #    runs-on: amd64-tke-mo
@@ -94,6 +95,7 @@ jobs:
 #          cd $GITHUB_WORKSPACE/mo-tester
 #          ./run.sh -n -g -o -p $GITHUB_WORKSPACE/matrixone/test/distributed/cases -s $GITHUB_WORKSPACE/matrixone/test/distributed/resources -e optimistic  2>&1
 #          rm -rf .git lib
+
 #  sysbench_oltp_test:
 #    name: SYSBENCH OLTP TEST
 #    runs-on: amd64-tke-mo
@@ -239,46 +241,47 @@ jobs:
 #          echo ''
 #          echo 'Start OLTP Insert Test With 100 threads'
 #          ./start.sh -c cases/sysbench/simple_insert_10_100000_auto -t 100 -d 10 -g -b sbtest
-#  tpcc_benchmark_test:
-#    if: always()
-#    name: TPCC BENCHMARK TEST
-#    runs-on: amd64-tke-mo
-#    timeout-minutes: 120
-#    steps:
-#      - name: Clone MO-Load-Data
-#        uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-load-data
-#          path: ./mo-load-data
-#          token: ${{secrets.TEST_TOKEN}}
-#          ref: main
-#      - name: Clone MO-Tpcc
-#        uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-tpcc
-#          path: ./mo-tpcc
-#          ref: main
-#      - name: Set JAVA PATH
-#        run: |
-#          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
-#      - name: Setup TPCC
-#        env:
-#          COS_AK: ${{ secrets.COS_AK }}
-#          COS_SK: ${{ secrets.COS_SK }}
-#        run: |
-#          echo "ENDPOINT: "https://cos.ap-chengdu.myqcloud.com"
-#          ACCESS_KEY_ID: "$COS_AK"
-#          SECRET_ACCESS_KEY: "$COS_SK"" > mo-load-data/access.yml
-#          cat mo-load-data/access.yml
-#      - name: Load TPCC 10 Warehouse Data
-#        if: ${{ always() && !cancelled() }}
-#        run: |
-#          name=tx9t85m29wpgfbib
-#          NAMESPACE=chaos-$name
-#          export LC_ALL="C.UTF-8"
-#          locale
-#          cd mo-load-data
-#          ./load.sh -c cases/tpcc_10_no_partition -h $name-tp-cn.$NAMESPACE -b mo-load-data-1308875761 -m -r
+
+  tpcc_benchmark_test:
+    if: always()
+    name: TPCC BENCHMARK TEST
+    runs-on: amd64-tke-mo
+    timeout-minutes: 120
+    steps:
+      - name: Clone MO-Load-Data
+        uses: actions/checkout@v4
+        with:
+          repository: matrixorigin/mo-load-data
+          path: ./mo-load-data
+          token: ${{secrets.TEST_TOKEN}}
+          ref: main
+      - name: Clone MO-Tpcc
+        uses: actions/checkout@v4
+        with:
+          repository: matrixorigin/mo-tpcc
+          path: ./mo-tpcc
+          ref: main
+      - name: Set JAVA PATH
+        run: |
+          echo "$JAVA_HOME/bin" >> $GITHUB_PATH
+      - name: Setup TPCC
+        env:
+          COS_AK: ${{ secrets.COS_AK }}
+          COS_SK: ${{ secrets.COS_SK }}
+        run: |
+          echo "ENDPOINT: "https://cos.ap-chengdu.myqcloud.com"
+          ACCESS_KEY_ID: "$COS_AK"
+          SECRET_ACCESS_KEY: "$COS_SK"" > mo-load-data/access.yml
+          cat mo-load-data/access.yml
+      - name: Load TPCC 10 Warehouse Data
+        if: ${{ always() && !cancelled() }}
+        run: |
+          name=nj68d1pmjlbkyuu4
+          NAMESPACE=chaos-$name
+          export LC_ALL="C.UTF-8"
+          locale
+          cd mo-load-data
+          ./load.sh -c cases/tpcc_10_no_partition -h $name-tp-cn.$NAMESPACE -b mo-load-data-1308875761 -m -r
 
 #      - name: Load TPCC 100 Warehouse Data
 #        if: ${{ always() && !cancelled() }}
