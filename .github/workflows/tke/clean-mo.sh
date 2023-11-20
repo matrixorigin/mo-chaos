@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-ls
 name=$(cat name)
 NAMESPACE=chaos-$name
 # remove mo clusterr
