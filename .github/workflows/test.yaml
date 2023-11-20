@@ -219,7 +219,7 @@ jobs:
           export LC_ALL="C.UTF-8"
           locale
           cd mo-load-data
-          ./load.sh -c cases/tpcc_10_no_partition -h $name-tp-cn.$NAMESPACE -m -r  
+          ./load.sh -c cases/tpcc_10_no_partition -h $name-tp-cn.$NAMESPACE -b mo-load-data-1308875761 -m -r
 
 #      - name: Load TPCC 100 Warehouse Data
 #        if: ${{ always() && !cancelled() }}
