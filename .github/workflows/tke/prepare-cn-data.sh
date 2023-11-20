@@ -2,7 +2,7 @@
 name=$(cat name)
 NAMESPACE=chaos-$name
 
-for pod in $(kubectl get pods --selector=matrixorigin.io/component=CNSet -n chaos-td760elehw6cgppu --no-headers -o custom-columns=":metadata.name"); do
+for pod in $(kubectl get pods --selector=matrixorigin.io/component=CNSet -n $NAMESPACE --no-headers -o custom-columns=":metadata.name"); do
   kubectl exec -it $pod -n $NAMESPACE -- bash -c '
   set -x;
   export https_proxy=http://proxy-service.proxy.svc.cluster.local:8001
