@@ -194,7 +194,6 @@ jobs:
     name: TPCC BENCHMARK TEST
     runs-on: amd64-tke-mo
     timeout-minutes: 120
-    needs: setup_mo_test_env
     steps:
       - name: Clone MO-Load-Data
         uses: actions/checkout@v4
