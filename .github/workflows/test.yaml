@@ -46,7 +46,7 @@ jobs:
 #          rm -rf .git lib
   sysbench_oltp_test:
     name: SYSBENCH OLTP TEST
-    runs-on: amd64-tke-mo
+    runs-on: amd64-tke-dind
     timeout-minutes: 150
     steps:
       - name: Clone MO-Load
