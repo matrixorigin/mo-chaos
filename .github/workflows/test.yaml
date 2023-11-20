@@ -270,8 +270,8 @@ jobs:
           COS_SK: ${{ secrets.COS_SK }}
         run: |
           echo "ENDPOINT: "https://cos.ap-chengdu.myqcloud.com"
-          ACCESS_KEY_ID: "$COS_AK"
-          SECRET_ACCESS_KEY: "$COS_SK"" > mo-load-data/access.yml
+          ACCESS_KEY_ID: "${COS_AK}"
+          SECRET_ACCESS_KEY: "${COS_SK}"" > mo-load-data/access.yml
       - name: Load TPCC 10 Warehouse Data
         if: ${{ always() && !cancelled() }}
         run: |
