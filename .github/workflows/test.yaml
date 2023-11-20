@@ -60,6 +60,7 @@ jobs:
         run: |
           echo "$JAVA_HOME/bin" >> $GITHUB_PATH
       - name: Start OLTP Point Select Test With 100 Threads
+        if: always()
         run: |
           name=tx9t85m29wpgfbib
           NAMESPACE=chaos-$name
@@ -77,6 +78,7 @@ jobs:
           ./start.sh -c cases/sysbench/point_select_10_100000 -t 100 -d 10 -g -b sbtest
 
       - name: Start OLTP Point Select Test With 1000 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
@@ -90,6 +92,7 @@ jobs:
           ./start.sh -c cases/sysbench/point_select_10_100000 -t 1000 -d 10 -g -b sbtest
 
       - name: Start OLTP Update Test With 100 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
@@ -103,6 +106,7 @@ jobs:
           ./start.sh -c cases/sysbench/update_pk_10_100000_rc -t 100 -d 10 -g -b sbtest
 
       - name: Start OLTP Update Test With 1000 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
@@ -116,6 +120,7 @@ jobs:
           ./start.sh -c cases/sysbench/update_pk_10_100000_rc -t 1000 -d 10 -g -b sbtest
 
       - name: Start OLTP Insert Test With 100 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
@@ -129,6 +134,7 @@ jobs:
           ./start.sh -c cases/sysbench/simple_insert_10_100000 -t 100 -d 10 -g -b sbtest
 
       - name: Start OLTP Insert Test With 1000 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
@@ -142,6 +148,7 @@ jobs:
           ./start.sh -c cases/sysbench/simple_insert_10_100000 -t 1000 -d 10 -g -b sbtest
 
       - name: Start OLTP Delete Test With 100 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
@@ -155,6 +162,7 @@ jobs:
           ./start.sh -c cases/sysbench/delete_pk_10_100000_rc -t 100 -d 10 -g -b sbtest
 
       - name: Start OLTP Delete Test With 1000 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
@@ -168,6 +176,7 @@ jobs:
           ./start.sh -c cases/sysbench/delete_pk_10_100000_rc -t 1000 -d 10 -g -b sbtest
 
       - name: Start OLTP Insert AutoIncrement Test With 100 Threads
+        if: always()
         run: |
           export LC_ALL="C.UTF-8"
           locale
