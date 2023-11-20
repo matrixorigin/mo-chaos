@@ -2,45 +2,46 @@ name: Just for Test
 on:
   workflow_dispatch:
 jobs:
-  Deploy:
-    runs-on: amd64-tke-dind
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy
-        env:
-          COS_AK: ${{ secrets.COS_AK }}
-          COS_SK: ${{ secrets.COS_SK }}
-        run: |
-          chmod +x .github/workflows/tke/install-mo.sh
-          .github/workflows/tke/install-mo.sh
-        shell: bash
-      - name: Upload mo cluster artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: mo-cluster
-          path: |
-            name
-  Wait-Until-Ready:
-    runs-on: amd64-tke-dind
-    needs:
-      - Deploy
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download mo cluster artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: mo-cluster
-          path: .
-      - name: Wait
-        run: |
-          chmod +x .github/workflows/tke/wait.sh
-          .github/workflows/tke/wait.sh
-        shell: bash
+#  Deploy:
+#    runs-on: amd64-tke-dind
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Deploy
+#        env:
+#          COS_AK: ${{ secrets.COS_AK }}
+#          COS_SK: ${{ secrets.COS_SK }}
+#        run: |
+#          chmod +x .github/workflows/tke/install-mo.sh
+#          .github/workflows/tke/install-mo.sh
+#        shell: bash
+#      - name: Upload mo cluster artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: |
+#            name
+#  Wait-Until-Ready:
+#    runs-on: amd64-tke-dind
+#    needs:
+#      - Deploy
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Download mo cluster artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: .
+#      - name: Wait
+#        run: |
+#          chmod +x .github/workflows/tke/wait.sh
+#          .github/workflows/tke/wait.sh
+#        shell: bash
   Prepare-Cn-Data:
     runs-on: amd64-tke-dind
     needs:
       - Wait-Until-Ready
     steps:
+      - uses: actions/checkout@v4
       - name: Download mo cluster artifact
         uses: actions/download-artifact@v3
         with:
