@@ -36,12 +36,21 @@ jobs:
           chmod +x .github/workflows/tke/wait.sh
           .github/workflows/tke/wait.sh
         shell: bash
-#  Prepare-Cn-Data:
-#    runs-on: amd64-tke-dind
-#    needs:
-#      - Wait-Until-Ready
-#    steps:
-#      -
+  Prepare-Cn-Data:
+    runs-on: amd64-tke-dind
+    needs:
+      - Wait-Until-Ready
+    steps:
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
+      - name: Clone Data
+        run: |
+          chmod +x .github/workflows/tke/prepare-cn-data.sh
+          .github/workflows/tke/prepare-cn-data.sh
+        shell: bash
 #  bvt_test:
 #    name: MO CHECKIN BVT TEST
 #    runs-on: amd64-tke-mo
