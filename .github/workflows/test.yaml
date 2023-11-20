@@ -38,8 +38,8 @@ jobs:
 #        shell: bash
   Prepare-Cn-Data:
     runs-on: amd64-tke-dind
-    needs:
-      - Wait-Until-Ready
+#    needs:
+#      - Wait-Until-Ready
     steps:
       - uses: actions/checkout@v4
       - name: Download mo cluster artifact
