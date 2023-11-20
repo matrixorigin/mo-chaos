@@ -212,10 +212,13 @@ jobs:
         run: |
           echo "$JAVA_HOME/bin" >> $GITHUB_PATH
       - name: Setup TPCC
+        env:
+          COS_AK: ${{ secrets.COS_AK }}
+          COS_SK: ${{ secrets.COS_SK }}
         run: |
           echo "ENDPOINT: "https://cos.ap-chengdu.myqcloud.com"
-          ACCESS_KEY_ID: "${{secrets.COS_AK}}"
-          SECRET_ACCESS_KEY: "${{secrets.COS_SK}}"" > mo-load-data/access.yml
+          ACCESS_KEY_ID: "$COS_AK"
+          SECRET_ACCESS_KEY: "$COS_SK"" > mo-load-data/access.yml
           cat mo-load-data/access.yml
       - name: Load TPCC 10 Warehouse Data
         if: ${{ always() && !cancelled() }}
