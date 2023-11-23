@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: run
+spec:
+  template:
+    spec:
+      containers:
+      - name: run
+        image: matrixorigin/mo-chaos-driller:1.0.0-beta11
+        env:
+          - name: DURATION
+            value: "14400"
+          - name: NAME
+            value: mo-io-stress
+        command:
+          - "python"
+          - "main.py"
+      restartPolicy: Never
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 5
