@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
+exp=$1
 name=$(cat name)
 NAMESPACE=chaos-$name
-kubectl apply -f .github/workflows/tke/cn-pod-delete-job.yaml -n $NAMESPACE
+kubectl apply -f .github/workflows/tke/$exp.yaml -n $NAMESPACE
 until kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
 do
     sleep 5
