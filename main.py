@@ -23,7 +23,7 @@ def load_scenario_class() -> dict:
             if f.name.endswith('.py'):
                 s_module = importlib.import_module(f'litmus.scenarios.{f.name.replace('.py', '')}')
                 for _, obj in inspect.getmembers(s_module):
-                    if inspect.isclass(obj):
+                    if inspect.isclass(obj) and obj.__name__.lower() != 'base':
                         s_class = obj()
                         if s_class.name == test_name:
                             return s_class.__dict__
