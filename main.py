@@ -19,13 +19,14 @@ test_name = os.getenv('NAME') or 'cn-pod-delete'
 def load_scenario_class() -> dict:
     # iterate all scenario class
     for f in os.scandir('litmus/scenarios'):
-        if f.name.endswith('.py') and not f.name.lower().startswith('base'):
-            s_module = importlib.import_module(f'litmus.scenarios.{f.name.replace('.py', '')}')
-            for _, obj in inspect.getmembers(s_module):
-                if inspect.isclass(obj):
-                    s_class = obj()
-                    if s_class.name == test_name:
-                        return s_class.__dict__
+        if not f.name.lower().startswith('base'):
+            if f.name.endswith('.py'):
+                s_module = importlib.import_module(f'litmus.scenarios.{f.name.replace('.py', '')}')
+                for _, obj in inspect.getmembers(s_module):
+                    if inspect.isclass(obj):
+                        s_class = obj()
+                        if s_class.name == test_name:
+                            return s_class.__dict__
     raise ModuleNotFoundError(f'test class for {test_name} not found')
 
 
