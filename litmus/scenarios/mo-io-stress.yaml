@@ -147,7 +147,7 @@ spec:
                           - patch
                           - update
                           - delete
-                    image: wxt432/chaos-go-runner:2.14.1-mo-beta3
+                    image: litmuschaos/go-runner:2.14.0
                     imagePullPolicy: Always
                     args:
                       - -c
@@ -239,8 +239,10 @@ spec:
                               value: containerd
                             - name: SOCKET_PATH
                               value: /var/run/containerd/containerd.sock
+                            - name: LIB_IMAGE
+                              values: wxt432/chaos-go-runner:2.14.1-mo-beta3
       container:
         args:
           - -file=/tmp/chaosengine-pod-io-stress-4ma.yaml
           - -saveName=/tmp/engine-name
-        image: wxt432/chaos-go-runner:2.14.1-mo-beta3
+        image: litmuschaos/litmus-checker:2.14.0
