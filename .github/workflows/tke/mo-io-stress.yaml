@@ -11,8 +11,6 @@ spec:
         env:
           - name: DURATION
             value: "14400"
-          - name: NAME
-            value: mo-io-stress
         command:
           - "python"
           - "main.py"
