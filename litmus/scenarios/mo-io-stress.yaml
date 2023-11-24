@@ -3,28 +3,24 @@
 # fs_utilization_percentage: percentage the disk utilized, default: 100
 # namespace: cn namespace, default is the current namespace chaos pod running
 # label: label for cn nodes, default: matrixorigin.io/component=CNSet
-apiVersion: argoproj.io/v1alpha1
 kind: Workflow
+apiVersion: argoproj.io/v1alpha1
 metadata:
   name: mo-io-stress
   namespace: litmus
 spec:
-  arguments:
-    parameters:
-      - name: adminModeNamespace
-        value: litmus
-  entrypoint: custom-chaos
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-  serviceAccountName: argo-chaos
   templates:
     - name: custom-chaos
+      inputs: {}
+      outputs: {}
+      metadata: {}
       steps:
         - - name: install-chaos-experiments
             template: install-chaos-experiments
+            arguments: {}
         - - name: pod-io-stress-4ma
             template: pod-io-stress-4ma
+            arguments: {}
     - name: install-chaos-experiments
       inputs:
         artifacts:
@@ -189,14 +185,18 @@ spec:
                       app.kubernetes.io/component: experiment-job
                       app.kubernetes.io/runtime-api-usage: "true"
                       app.kubernetes.io/version: 2.14.0
+      outputs: {}
+      metadata: {}
       container:
-        args:
-          - kubectl apply -f /tmp/pod-io-stress-4ma.yaml -n
-            {{workflow.parameters.adminModeNamespace}} &&  sleep 30
+        name: ""
+        image: litmuschaos/k8s:2.14.0
         command:
           - sh
           - -c
-        image: litmuschaos/k8s:2.14.0
+        args:
+          - kubectl apply -f /tmp/pod-io-stress-4ma.yaml -n
+            {{workflow.parameters.adminModeNamespace}} &&  sleep 30
+        resources: {}
     - name: pod-io-stress-4ma
       inputs:
         artifacts:
@@ -214,7 +214,10 @@ spec:
                 spec:
                   components:
                     runner:
-                      tolerations
+                      tolerations:
+                        - key: node-role.kubernetes.io/mo-checkin-regression
+                          operator: Exists
+                          effect: NoSchedule
                   engineState: active
                   appinfo:
                     appns: $namespace
@@ -231,6 +234,8 @@ spec:
                               value: "$filesystem_utilization_bytes"
                             - name: NUMBER_OF_WORKERS
                               value: "$workers"
+                            - name: LIB_IMAGE
+                              value: wxt432/chaos-go-runner:2.14.1-mo-beta3
                             - name: PODS_AFFECTED_PERC
                               value: ""
                             - name: VOLUME_MOUNT_PATH
@@ -239,10 +244,23 @@ spec:
                               value: containerd
                             - name: SOCKET_PATH
                               value: /var/run/containerd/containerd.sock
-                            - name: LIB_IMAGE
-                              values: wxt432/chaos-go-runner:2.14.1-mo-beta3
+      outputs: {}
+      metadata:
+        labels:
+          weight: "10"
       container:
+        name: ""
+        image: litmuschaos/litmus-checker:2.14.0
         args:
           - -file=/tmp/chaosengine-pod-io-stress-4ma.yaml
           - -saveName=/tmp/engine-name
-        image: litmuschaos/litmus-checker:2.14.0
+        resources: {}
+  entrypoint: custom-chaos
+  arguments:
+    parameters:
+      - name: adminModeNamespace
+        value: litmus
+  serviceAccountName: argo-chaos
+  securityContext:
+    runAsUser: 1000
+    runAsNonRoot: true
