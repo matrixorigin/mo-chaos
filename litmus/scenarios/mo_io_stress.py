@@ -7,4 +7,5 @@ class MoIoStress(Base):
     def __init__(self):
         super().__init__()
         self.name = 'mo-io-stress'
-        self.fs_utilization_percentage = os.getenv('FS_UTILIZATION_PERCENTAGE') or '100'
+        self.filesystem_utilization_bytes = os.getenv('FILESYSTEM_UTILIZATION_BYTES') or '40'
+        self.workers = os.getenv('WORKERS') or '16'

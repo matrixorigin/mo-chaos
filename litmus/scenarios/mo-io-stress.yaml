@@ -147,7 +147,7 @@ spec:
                           - patch
                           - update
                           - delete
-                    image: litmuschaos/go-runner:2.14.0
+                    image: wxt432/chaos-go-runner:2.14.1-mo-beta3
                     imagePullPolicy: Always
                     args:
                       - -c
@@ -212,6 +212,9 @@ spec:
                   labels:
                     workflow_run_id: "{{workflow.uid}}"
                 spec:
+                  components:
+                    runner:
+                      tolerations
                   engineState: active
                   appinfo:
                     appns: $namespace
@@ -224,8 +227,10 @@ spec:
                           env:
                             - name: TOTAL_CHAOS_DURATION
                               value: "$duration"
-                            - name: FILESYSTEM_UTILIZATION_PERCENTAGE
-                              value: "$fs_utilization_percentage"
+                            - name: FILESYSTEM_UTILIZATION_BYTES
+                              value: "$filesystem_utilization_bytes"
+                            - name: NUMBER_OF_WORKERS
+                              value: "$workers"
                             - name: PODS_AFFECTED_PERC
                               value: ""
                             - name: VOLUME_MOUNT_PATH
@@ -238,4 +243,4 @@ spec:
         args:
           - -file=/tmp/chaosengine-pod-io-stress-4ma.yaml
           - -saveName=/tmp/engine-name
-        image: litmuschaos/litmus-checker:2.14.0
+        image: wxt432/chaos-go-runner:2.14.1-mo-beta3
