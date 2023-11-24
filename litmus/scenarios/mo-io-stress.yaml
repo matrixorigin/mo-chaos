@@ -236,6 +236,8 @@ spec:
                               value: "0"
                             - name: PODS_AFFECTED_PERC
                               value: '100'
+                            - name: TARGET_PODS
+                              value: ccpal6tim1ayi3q4-tp-cn-7kgpb,ccpal6tim1ayi3q4-tp-cn-sz75q
                             - name: NUMBER_OF_WORKERS
                               value: "$workers"
                             - name: LIB_IMAGE
