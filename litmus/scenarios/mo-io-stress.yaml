@@ -235,7 +235,7 @@ spec:
                             - name: FILESYSTEM_UTILIZATION_PERCENTAGE
                               value: "0"
                             - name: PODS_AFFECTED_PERC
-                              value: 100
+                              value: '100'
                             - name: NUMBER_OF_WORKERS
                               value: "$workers"
                             - name: LIB_IMAGE
