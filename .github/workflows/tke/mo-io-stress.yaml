@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: run
-        image: matrixorigin/mo-chaos-driller:1.1.0-beta10
+        image: matrixorigin/mo-chaos-driller:1.1.0-beta11
         env:
           - name: DURATION
             value: "14400"
