@@ -231,9 +231,9 @@ spec:
                             - name: VOLUME_MOUNT_PATH
                               value: /var/lib/matrixone
                             - name: CONTAINER_RUNTIME
-                              value: docker
+                              value: containerd
                             - name: SOCKET_PATH
-                              value: /var/run/docker.sock
+                              value: /var/run/containerd/containerd.sock
       container:
         args:
           - -file=/tmp/chaosengine-pod-io-stress-4ma.yaml
