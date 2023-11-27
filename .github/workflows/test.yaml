@@ -6,6 +6,5 @@ jobs:
     runs-on: amd64-tke-dind
     steps:
       - run: |
-          echo $KUBECONFIG
-          kubectl get nodes
+          sleep 160
         name: Run
