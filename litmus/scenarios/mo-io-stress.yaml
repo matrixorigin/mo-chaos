@@ -1,8 +1,3 @@
-# param
-# duration: run duration, default: 60
-# fs_utilization_percentage: percentage the disk utilized, default: 100
-# namespace: cn namespace, default is the current namespace chaos pod running
-# label: label for cn nodes, default: matrixorigin.io/component=CNSet
 kind: Workflow
 apiVersion: argoproj.io/v1alpha1
 metadata:
@@ -237,7 +232,7 @@ spec:
                             - name: PODS_AFFECTED_PERC
                               value: '100'
                             - name: TARGET_PODS
-                              value: ccpal6tim1ayi3q4-tp-cn-7kgpb,ccpal6tim1ayi3q4-tp-cn-sz75q
+                              value: $target_pods
                             - name: NUMBER_OF_WORKERS
                               value: "$workers"
                             - name: LIB_IMAGE

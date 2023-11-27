@@ -4,6 +4,7 @@ import os
 from yaml import Loader
 
 from litmus.cluster import get_cluster_id
+from litmus.kube import fetch_pod_names
 from litmus.project import get_project_id
 from litmus.workflow import create_workflow, ChaosWorkflowRequest, get_workflow_run_stats
 import yaml
@@ -26,6 +27,9 @@ def load_scenario_class() -> dict:
                     if inspect.isclass(obj) and obj.__name__.lower() != 'base':
                         s_class = obj()
                         if s_class.name == test_name:
+                            if s_class.__dict__['all_pods']:
+                                s_class.__dict__['target_pods'] = fetch_pod_names(s_class.__dict__['namespace'],
+                                                                                  s_class.__dict__['label'])
                             return s_class.__dict__
     raise ModuleNotFoundError(f'test class for {test_name} not found')
 
