@@ -6,5 +6,6 @@ jobs:
     runs-on: amd64-tke-dind
     steps:
       - run: |
-          cat ~/.kube/config
+          echo $KUBECONFIG
+          kubectl get nodes
         name: Run
