@@ -17,5 +17,6 @@ spec:
           - "python"
           - "main.py"
       restartPolicy: Never
+      serviceAccountName: gha-runner-cluster-admin
   backoffLimit: 0
   ttlSecondsAfterFinished: 5
