@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 exp=$1
-#name=$(cat name)
-name=ccpal6tim1ayi3q4
+name=$(cat name)
 NAMESPACE=chaos-$name
 kubectl apply -f .github/workflows/tke/$exp.yaml -n $NAMESPACE
 until kubectl wait --for=condition=ready pod --selector=job-name=run --timeout=-1s -n $NAMESPACE
