@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 pfx=$(cat /dev/urandom | tr -dc 'a-z' | head -c 1)
 sfx=$(cat /dev/urandom | tr -cd 'a-z0-9' | head -c 15)
 name=$pfx$sfx

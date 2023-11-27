@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 name=$(cat name)
 NAMESPACE=chaos-$name
 # remove mo cluster

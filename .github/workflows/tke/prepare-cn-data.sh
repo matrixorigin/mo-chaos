@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 name=$(cat name)
 NAMESPACE=chaos-$name
 
