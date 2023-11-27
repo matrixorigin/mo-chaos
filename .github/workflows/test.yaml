@@ -4,8 +4,6 @@ on:
 jobs:
   Run-Chaos:
     runs-on: amd64-tke-dind
-    needs:
-      - Wait-Until-Ready
     steps:
       - run: |
           cat ~/.kube/config
