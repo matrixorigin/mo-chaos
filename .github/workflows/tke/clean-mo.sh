@@ -17,7 +17,7 @@ do
   fi
 done
 # delete crb
-kubectl delete clusterrolebindings chaos-job-rb-chaos-ccpal6tim1ayi3q4
+kubectl delete clusterrolebindings chaos-job-rb-$NAMESPACE
 # delete namespace
 echo "kubectl delete ns $NAMESPACE"
 kubectl delete ns $NAMESPACE
