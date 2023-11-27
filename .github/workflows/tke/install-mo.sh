@@ -28,3 +28,7 @@ eval "echo \"$(cat .github/workflows/tke/mo-cluster.temp)\""
 eval "echo \"$(cat .github/workflows/tke/mo-cluster.temp)\"" > mo-cluster.yaml
 # create mo cluster
 kubectl apply -n $NAMESPACE -f mo-cluster.yaml
+# create crb
+kubectl create clusterrolebinding --serviceaccount $NAMESPACE:chaos-job-runner --clusterrole=tke:admin chaos-job-rb-$NAMESPACE
+# create sa
+kubectl create serviceaccount chaos-job-runner -n $NAMESPACE
