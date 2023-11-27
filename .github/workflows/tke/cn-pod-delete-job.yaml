@@ -17,5 +17,6 @@ spec:
           - "python"
           - "main.py"
       restartPolicy: Never
+      serviceAccountName: chaos-job-runner
   backoffLimit: 0
   ttlSecondsAfterFinished: 5
