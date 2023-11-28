@@ -1,5 +1,3 @@
-import os
-
 from litmus.scenarios.base import Base
 
 

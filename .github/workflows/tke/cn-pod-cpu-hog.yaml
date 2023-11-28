@@ -11,8 +11,8 @@ spec:
         env:
           - name: DURATION
             value: "14400"
-          - name: INTERVAL
-            value: "300"
+          - name: NAME
+            value: cn-pod-cpu-hog
         command:
           - "python"
           - "main.py"
