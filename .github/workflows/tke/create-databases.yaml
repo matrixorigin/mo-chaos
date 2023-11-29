@@ -1,12 +1,12 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: data
+  name: create-databases
 spec:
   template:
     spec:
       containers:
-      - name: data
+      - name: create-databases
         image: matrixorigin/mo-chaos-data:1.0.0-beta1
         env:
           - name: DURATION

@@ -1,12 +1,12 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: run
+  name: cn-pod-cpu-hog
 spec:
   template:
     spec:
       containers:
-      - name: run
+      - name: cn-pod-cpu-hog
         image: matrixorigin/mo-chaos-driller:1.1.2-beta1
         env:
           - name: DURATION
