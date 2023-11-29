@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data
+spec:
+  template:
+    spec:
+      containers:
+      - name: data
+        image: matrixorigin/mo-chaos-data:1.0.0-beta1
+        env:
+          - name: DURATION
+            value: "1800"
+          - name: LOCAL_DEBUG
+            value: "false"
+        command:
+          - "python"
+          - "main.py"
+      restartPolicy: Never
+      serviceAccountName: chaos-job-runner
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 5
