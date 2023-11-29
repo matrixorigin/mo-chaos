@@ -19,4 +19,4 @@ spec:
       restartPolicy: Never
       serviceAccountName: chaos-job-runner
   backoffLimit: 0
-  ttlSecondsAfterFinished: 5
+#  ttlSecondsAfterFinished: 5
