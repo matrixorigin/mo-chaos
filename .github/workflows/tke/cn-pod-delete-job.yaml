@@ -12,7 +12,7 @@ spec:
         image: matrixorigin/mo-chaos-driller:1.1.2-beta1
         env:
           - name: DURATION
-            value: "2700"
+            value: "180"
           - name: INTERVAL
             value: "300"
         command:
