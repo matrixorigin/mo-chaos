@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    mo.chaos.data: true
+    mo.chaos.data: "true"
   name: create-databases
 spec:
   template:

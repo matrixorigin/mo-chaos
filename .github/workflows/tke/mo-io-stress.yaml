@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    mo.chaos.exp: true
+    mo.chaos.exp: "true"
   name: mo-io-stress
 spec:
   template:
