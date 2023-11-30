@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: create-databases
-        image: matrixorigin/mo-chaos-data:1.0.0-beta5
+        image: matrixorigin/mo-chaos-data:1.0.0-beta6
         env:
           - name: DURATION
             value: "120"
