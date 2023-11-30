@@ -6,6 +6,9 @@ metadata:
   name: create-databases
 spec:
   template:
+    metadata:
+      labels:
+        mo.chaos.data: "true"
     spec:
       containers:
       - name: create-databases
