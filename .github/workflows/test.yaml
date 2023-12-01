@@ -1,8 +1,8 @@
-name: Just for Test
+name: Deploy Mo Cluster and Run Chaos Experiment on TKE
 on:
   workflow_dispatch:
     inputs:
-      data:
+      scene:
         type: choice
         required: true
         description: Chaos data to be created
@@ -10,51 +10,51 @@ on:
           - create-databases
 
 jobs:
-#  deploy_mo_cluster:
-#    name: Deploy
-#    runs-on: amd64-tke-dind
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-chaos-driller
-#          path: .
-#          ref: main
-#      - name: Deploy
-#        env:
-#          COS_AK: ${{ secrets.COS_AK }}
-#          COS_SK: ${{ secrets.COS_SK }}
-#        run: |
-#          chmod +x .github/workflows/tke/install-mo.sh
-#          .github/workflows/tke/install-mo.sh
-#        shell: bash
-#      - name: Upload mo cluster artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: |
-#            name
-#  wait:
-#    name: Wait Until Ready
-#    runs-on: amd64-tke-dind
-#    timeout-minutes: 30
-#    needs:
-#      - deploy_mo_cluster
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-chaos-driller
-#          path: .
-#          ref: main
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
-#      - name: Wait
-#        run: |
-#          chmod +x .github/workflows/tke/wait.sh
-#          .github/workflows/tke/wait.sh
-#        shell: bash
+  deploy_mo_cluster:
+    name: Deploy
+    runs-on: amd64-tke-dind
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: matrixorigin/mo-chaos-driller
+          path: .
+          ref: main
+      - name: Deploy
+        env:
+          COS_AK: ${{ secrets.COS_AK }}
+          COS_SK: ${{ secrets.COS_SK }}
+        run: |
+          chmod +x .github/workflows/tke/install-mo.sh
+          .github/workflows/tke/install-mo.sh
+        shell: bash
+      - name: Upload mo cluster artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mo-cluster
+          path: |
+            name
+  wait:
+    name: Wait Until Ready
+    runs-on: amd64-tke-dind
+    timeout-minutes: 30
+    needs:
+      - deploy_mo_cluster
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: matrixorigin/mo-chaos-driller
+          path: .
+          ref: main
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
+      - name: Wait
+        run: |
+          chmod +x .github/workflows/tke/wait.sh
+          .github/workflows/tke/wait.sh
+        shell: bash
 
 #  prep_data:
 #    name: Prepare CN Data
@@ -78,38 +78,27 @@ jobs:
 #          .github/workflows/tke/prepare-cn-data.sh
 #        shell: bash
 
-  chaos_data:
-    name: Run Chaos Data
+  chaos:
+    name: Run Chaos
     runs-on: amd64-tke-dind
-#    needs:
-#      - wait
+    needs:
+      - wait
     steps:
       - uses: actions/checkout@v4
         with:
           repository: matrixorigin/mo-chaos-driller
           path: .
           ref: main
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
       - run: |
-          set -ex
-          data_scene=${{ inputs.data }}
-          name=uw54hsc8own2jgpg
-          NAMESPACE=chaos-$name
-          kubectl apply -f .github/workflows/tke/$data_scene.yaml -n $NAMESPACE
-          until kubectl wait --for=condition=ready pod --selector=job-name=$data_scene --timeout=-1s -n $NAMESPACE
-          do
-              sleep 5
-          done
-          kubectl logs -f job.batch/$data_scene -n $NAMESPACE
-          # chmod +x .github/workflows/tke/run-chaos-data.sh
-          # .github/workflows/tke/run-chaos-data.sh ${{ inputs.data }} ${{ inputs.chaos }}
+          chmod +x .github/workflows/tke/run-chaos-data.sh
+          .github/workflows/tke/run-chaos-data.sh ${{ inputs.scene }}
         shell: bash
         name: Run
-
 
 #  Cleanup:
 #    runs-on: amd64-tke-dind
