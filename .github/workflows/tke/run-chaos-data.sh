@@ -9,3 +9,4 @@ do
     sleep 5
 done
 kubectl logs -f job.batch/$data_scene -n $NAMESPACE
+kubectl delete jobs.batch $data_scene -n $NAMESPACE
