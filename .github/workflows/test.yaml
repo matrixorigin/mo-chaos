@@ -99,6 +99,12 @@ jobs:
           .github/workflows/tke/run-chaos-data.sh ${{ inputs.scene }}
         shell: bash
         name: Run
+      - name: Upload mo cluster artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: statistics
+          path: |
+            stat.yaml
 
   Cleanup:
     runs-on: amd64-tke-dind
