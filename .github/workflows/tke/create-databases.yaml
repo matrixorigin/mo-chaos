@@ -12,14 +12,14 @@ spec:
     spec:
       containers:
       - name: create-databases
-        image: matrixorigin/mo-chaos-data:1.0.0-beta7
+        image: matrixorigin/mo-chaos-data:1.1.0-beta1
         env:
           - name: DURATION
             value: "120"
           - name: LOCAL_DEBUG
             value: "false"
-          - name: WATCH_JOBS
-            value: "$watch_jobs"
+          - name: CHAOS_JOBS
+            value: "cn-pod-delete-job"
         command:
           - "python"
           - "main.py"

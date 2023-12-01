@@ -2,14 +2,6 @@ name: Just for Test
 on:
   workflow_dispatch:
     inputs:
-      chaos:
-        type: choice
-        required: true
-        description: Chaos experiment to be injected
-        options:
-          - cn-pod-delete-job
-          - mo-io-stress
-          - cn-pod-cpu-hog
       data:
         type: choice
         required: true
@@ -86,40 +78,6 @@ jobs:
 #          .github/workflows/tke/prepare-cn-data.sh
 #        shell: bash
 
-  chaos:
-    name: Run Chaos
-    runs-on: amd64-tke-dind
-#    needs:
-#      - wait
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: matrixorigin/mo-chaos-driller
-          path: .
-          ref: main
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
-      - run: |
-          set -ex
-          exp=${{ inputs.chaos }}
-          name=uw54hsc8own2jgpg
-          NAMESPACE=chaos-$name
-          until kubectl wait --for=condition=ready pod --selector=mo.chaos.data=true --timeout=-1s -n $NAMESPACE
-          do
-              sleep 30
-          done
-          kubectl apply -f .github/workflows/tke/$exp.yaml -n $NAMESPACE
-          until kubectl wait --for=condition=ready pod --selector=job-name=$exp --timeout=-1s -n $NAMESPACE
-          do
-              sleep 5
-          done
-          kubectl logs -f job.batch/$exp -n $NAMESPACE
-        shell: bash
-        name: Run
-
   chaos_data:
     name: Run Chaos Data
     runs-on: amd64-tke-dind
@@ -139,7 +97,6 @@ jobs:
       - run: |
           set -ex
           data_scene=${{ inputs.data }}
-          chaos_jobs=${{ inputs.chaos }}
           name=uw54hsc8own2jgpg
           NAMESPACE=chaos-$name
           sed -i "s/\$watch_jobs/$chaos_jobs/g" .github/workflows/tke/$data_scene.yaml
