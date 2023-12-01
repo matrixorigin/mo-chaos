@@ -1,4 +1,4 @@
-name: Deploy Mo Cluster and Run Chaos Experiment on TKE
+name: Just for Test
 on:
   workflow_dispatch:
     inputs:
