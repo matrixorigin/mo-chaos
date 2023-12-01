@@ -99,7 +99,6 @@ jobs:
           data_scene=${{ inputs.data }}
           name=uw54hsc8own2jgpg
           NAMESPACE=chaos-$name
-          sed -i "s/\$watch_jobs/$chaos_jobs/g" .github/workflows/tke/$data_scene.yaml
           kubectl apply -f .github/workflows/tke/$data_scene.yaml -n $NAMESPACE
           until kubectl wait --for=condition=ready pod --selector=job-name=$data_scene --timeout=-1s -n $NAMESPACE
           do
