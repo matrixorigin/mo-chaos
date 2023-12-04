@@ -10,29 +10,29 @@ on:
           - create-databases-with-cn-pod-del
 
 jobs:
-  deploy_mo_cluster:
-    name: Deploy
-    runs-on: amd64-tke-dind
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: matrixorigin/mo-chaos-driller
-          path: .
-          ref: main
-      - name: Deploy
-        env:
-          COS_AK: ${{ secrets.COS_AK }}
-          COS_SK: ${{ secrets.COS_SK }}
-        run: |
-          chmod +x .github/workflows/tke/install-mo.sh
-          .github/workflows/tke/install-mo.sh
-        shell: bash
-      - name: Upload mo cluster artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: mo-cluster
-          path: |
-            name
+#  deploy_mo_cluster:
+#    name: Deploy
+#    runs-on: amd64-tke-dind
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          repository: matrixorigin/mo-chaos-driller
+#          path: .
+#          ref: main
+#      - name: Deploy
+#        env:
+#          COS_AK: ${{ secrets.COS_AK }}
+#          COS_SK: ${{ secrets.COS_SK }}
+#        run: |
+#          chmod +x .github/workflows/tke/install-mo.sh
+#          .github/workflows/tke/install-mo.sh
+#        shell: bash
+#      - name: Upload mo cluster artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: mo-cluster
+#          path: |
+#            name
 #  wait:
 #    name: Wait Until Ready
 #    runs-on: amd64-tke-dind
