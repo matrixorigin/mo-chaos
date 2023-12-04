@@ -81,8 +81,8 @@ jobs:
   chaos:
     name: Run Chaos
     runs-on: amd64-tke-dind
-    needs:
-      - wait
+#    needs:
+#      - wait
     steps:
       - uses: actions/checkout@v4
         with:
