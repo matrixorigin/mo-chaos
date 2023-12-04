@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    mo.chaos.data: "true"
+  name: create-databases-with-cn-pod-del
+spec:
+  template:
+    metadata:
+      labels:
+        mo.chaos.data: "true"
+    spec:
+      containers:
+      - name: create-databases-with-cn-pod-del
+        image: matrixorigin/mo-chaos-data:1.2.0-beta1
+        env:
+          - name: DURATION
+            value: "1800"
+          - name: TEST_TYPE
+            value: CREATE_TABLES
+          - name: LOCAL_DEBUG
+            value: "false"
+          - name: CHAOS_JOBS
+            value: "cn-pod-delete-job"
+          - name: ACTIONS_RUNNER_POD_NAME
+            value: $ACTIONS_RUNNER_POD_NAME
+          - name: GITHUB_WORKSPACE
+            value: $GITHUB_WORKSPACE
+        command:
+          - "python"
+          - "main.py"
+      restartPolicy: Never
+      serviceAccountName: chaos-job-runner
+  backoffLimit: 0
+#  ttlSecondsAfterFinished: 5
