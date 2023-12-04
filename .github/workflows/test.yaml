@@ -5,9 +5,9 @@ on:
       scene:
         type: choice
         required: true
-        description: Chaos data to be created
+        description: Chaos scenarios to be chosen
         options:
-          - create-databases
+          - create-databases-with-cn-pod-del
 
 jobs:
   deploy_mo_cluster:
@@ -99,12 +99,15 @@ jobs:
           .github/workflows/tke/run-chaos-data.sh ${{ inputs.scene }}
         shell: bash
         name: Run
-      - name: Upload mo cluster artifact
+      - name: Upload logs
         uses: actions/upload-artifact@v3
         with:
           name: statistics
           path: |
             stat.yaml
+      - run: |
+          sleep 600
+        name: Run
 
   Cleanup:
     runs-on: amd64-tke-dind

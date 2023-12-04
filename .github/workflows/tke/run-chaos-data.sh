@@ -3,6 +3,7 @@ set -ex
 data_scene=$1
 name=$(cat name)
 NAMESPACE=chaos-$name
+sed -i "s/\$ACTIONS_RUNNER_POD_NAME/$ACTIONS_RUNNER_POD_NAME/" .github/workflows/tke/$data_scene.yaml
 kubectl apply -f .github/workflows/tke/$data_scene.yaml -n $NAMESPACE
 until kubectl wait --for=condition=ready pod --selector=job-name=$data_scene --timeout=-1s -n $NAMESPACE
 do

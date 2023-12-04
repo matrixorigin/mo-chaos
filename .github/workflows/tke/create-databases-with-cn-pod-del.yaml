@@ -15,11 +15,13 @@ spec:
         image: matrixorigin/mo-chaos-data:1.1.0-beta2
         env:
           - name: DURATION
-            value: "1800"
+            value: "120"
           - name: LOCAL_DEBUG
             value: "false"
           - name: CHAOS_JOBS
             value: "cn-pod-delete-job"
+          - name: ACTIONS_RUNNER_POD_NAME
+            value: $ACTIONS_RUNNER_POD_NAME
         command:
           - "python"
           - "main.py"
