@@ -1,7 +1,8 @@
 #!/bin/bash
 set -ex
 data_scene=$1
-name=$(cat name)
+#name=$(cat name)
+name=zndmnczhyjclb13e
 NAMESPACE=chaos-$name
 sed -i "s%\$ACTIONS_RUNNER_POD_NAME%$ACTIONS_RUNNER_POD_NAME%g" .github/workflows/tke/$data_scene.yaml
 sed -i "s%\$GITHUB_WORKSPACE%$GITHUB_WORKSPACE%g" .github/workflows/tke/$data_scene.yaml
