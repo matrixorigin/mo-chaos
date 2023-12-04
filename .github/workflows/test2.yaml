@@ -20,4 +20,5 @@ jobs:
           COS_SK: ${{ secrets.COS_SK }}
         run: |
           env
+          sleep infinity
         shell: bash
