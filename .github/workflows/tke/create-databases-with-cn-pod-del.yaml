@@ -22,6 +22,8 @@ spec:
             value: "cn-pod-delete-job"
           - name: ACTIONS_RUNNER_POD_NAME
             value: $ACTIONS_RUNNER_POD_NAME
+          - name: GITHUB_WORKSPACE
+            value: $GITHUB_WORKSPACE
         command:
           - "python"
           - "main.py"

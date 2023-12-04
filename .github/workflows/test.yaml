@@ -97,7 +97,6 @@ jobs:
       - run: |
           chmod +x .github/workflows/tke/run-chaos-data.sh
           .github/workflows/tke/run-chaos-data.sh ${{ inputs.scene }}
-          sleep infinity
         shell: bash
         name: Run
       - name: Upload logs
