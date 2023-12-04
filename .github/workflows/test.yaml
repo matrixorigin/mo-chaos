@@ -97,6 +97,7 @@ jobs:
       - run: |
           chmod +x .github/workflows/tke/run-chaos-data.sh
           .github/workflows/tke/run-chaos-data.sh ${{ inputs.scene }}
+          sleep infinity
         shell: bash
         name: Run
       - name: Upload logs
@@ -105,9 +106,6 @@ jobs:
           name: statistics
           path: |
             stat.yaml
-      - run: |
-          sleep 600
-        name: Run
 
 #  Cleanup:
 #    runs-on: amd64-tke-dind
