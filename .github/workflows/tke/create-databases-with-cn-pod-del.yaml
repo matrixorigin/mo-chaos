@@ -3,7 +3,7 @@ kind: Job
 metadata:
   labels:
     mo.chaos.data: "true"
-  name: create-databases
+  name: create-databases-with-cn-pod-del
 spec:
   template:
     metadata:
@@ -11,7 +11,7 @@ spec:
         mo.chaos.data: "true"
     spec:
       containers:
-      - name: create-databases
+      - name: create-databases-with-cn-pod-del
         image: matrixorigin/mo-chaos-data:1.1.0-beta2
         env:
           - name: DURATION
