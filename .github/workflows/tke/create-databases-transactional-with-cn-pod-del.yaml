@@ -24,6 +24,8 @@ spec:
             value: $ACTIONS_RUNNER_POD_NAME
           - name: GITHUB_WORKSPACE
             value: $GITHUB_WORKSPACE
+          - name: TRANSACTION
+            value: "true"
         command:
           - "python"
           - "main.py"
