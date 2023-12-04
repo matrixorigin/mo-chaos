@@ -105,6 +105,7 @@ jobs:
           name: statistics
           path: |
             stat.yaml
+            output.log
 
 #  Cleanup:
 #    runs-on: amd64-tke-dind
