@@ -22,6 +22,8 @@ spec:
             value: "false"
           - name: CHAOS_JOBS
             value: "cn-pod-delete-job"
+          - name: TRANSACTION
+            value: "true"
           - name: ACTIONS_RUNNER_POD_NAME
             value: $ACTIONS_RUNNER_POD_NAME
           - name: GITHUB_WORKSPACE
