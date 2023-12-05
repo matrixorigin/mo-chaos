@@ -171,6 +171,8 @@ spec:
                         value: ""
                       - name: SEQUENCE
                         value: parallel
+                      - name: STATUS_CHECK_TIMEOUT
+                        value: ""
                     labels:
                       name: pod-delete
                       app.kubernetes.io/part-of: litmus
