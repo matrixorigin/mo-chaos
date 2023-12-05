@@ -171,8 +171,6 @@ spec:
                         value: ""
                       - name: SEQUENCE
                         value: parallel
-                      - name: STATUS_CHECK_TIMEOUT
-                        value: ""
                     labels:
                       name: pod-delete
                       app.kubernetes.io/part-of: litmus
@@ -214,6 +212,9 @@ spec:
                     - name: pod-delete
                       spec:
                         components:
+                          statusCheckTimeouts:
+                            delay: 2
+                            timeout: 360
                           env:
                             - name: TOTAL_CHAOS_DURATION
                               value: "$duration"
@@ -223,8 +224,6 @@ spec:
                               value: "false"
                             - name: PODS_AFFECTED_PERC
                               value: "100"
-                            - name: STATUS_CHECK_TIMEOUT
-                              value: "360"
       outputs: {}
       metadata:
         labels:
