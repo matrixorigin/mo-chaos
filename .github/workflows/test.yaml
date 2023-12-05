@@ -100,7 +100,7 @@ jobs:
 #          path: .
       - run: |
           set -ex
-          data_scene=$1
+          data_scene=${{ inputs.scene }}
           name=oj4c30wommby5fbl
           NAMESPACE=chaos-$name
           sed -i "s%\$ACTIONS_RUNNER_POD_NAME%$ACTIONS_RUNNER_POD_NAME%g" .github/workflows/tke/$data_scene.yaml
