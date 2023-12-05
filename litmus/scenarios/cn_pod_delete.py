@@ -5,4 +5,3 @@ class CnPodDelete(Base):
     def __init__(self):
         super().__init__()
         self.name = 'cn-pod-delete'
-        self.interval = 30
