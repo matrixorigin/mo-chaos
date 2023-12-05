@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    mo.chaos.exp: "true"
+  name: cn-pod-delete-job-all
+spec:
+  template:
+    spec:
+      containers:
+      - name: cn-pod-delete-job-all
+        image: matrixorigin/mo-chaos-driller:1.1.3-beta1
+        env:
+          - name: DURATION
+            value: "180"
+          - name: INTERVAL
+            value: "300"
+        command:
+          - "python"
+          - "main.py"
+      restartPolicy: Never
+      serviceAccountName: chaos-job-runner
+  backoffLimit: 0
+#  ttlSecondsAfterFinished: 5
