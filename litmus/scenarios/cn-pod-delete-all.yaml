@@ -221,6 +221,8 @@ spec:
                               value: "false"
                             - name: PODS_AFFECTED_PERC
                               value: "100"
+                            - name: STATUS_CHECK_TIMEOUT
+                              value: "360"
       outputs: {}
       metadata:
         labels:
