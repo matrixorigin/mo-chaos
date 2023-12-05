@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy_mo_cluster:
-    name: Deploy
+    name: Run Chaos, ${{ inputs.scene }}
     runs-on: amd64-tke-dind
     steps:
       - name: Deploy
