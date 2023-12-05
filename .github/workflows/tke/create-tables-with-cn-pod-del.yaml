@@ -17,7 +17,7 @@ spec:
           - name: DURATION
             value: "1800"
           - name: TEST_TYPE
-            value: CREATE_TABLES
+            value: create_tables
           - name: LOCAL_DEBUG
             value: "false"
           - name: CHAOS_JOBS
