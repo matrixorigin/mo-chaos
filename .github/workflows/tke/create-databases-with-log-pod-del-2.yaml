@@ -12,10 +12,10 @@ spec:
     spec:
       containers:
       - name: create-databases-with-log-pod-del-2
-        image: matrixorigin/mo-chaos-data:1.2.3-beta5
+        image: matrixorigin/mo-chaos-data:1.2.3-beta6
         env:
           - name: DURATION
-            value: "1800"
+            value: "60"
           - name: LOCAL_DEBUG
             value: "false"
           - name: CHAOS_JOBS
