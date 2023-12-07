@@ -12,6 +12,7 @@ on:
           - create-databases-transactional-with-cn-pod-del
           - create-tables-transactional-with-cn-pod-del
           - create-databases-with-cn-pod-del-all
+          - create-databases-with-log-pod-del-2
 
 jobs:
 #  deploy_mo_cluster:
