@@ -1,3 +1,3 @@
 FROM wxt432/godzilla-chaos
 
-COPY *.yaml /godzilla/scenarios/
+COPY litmus/scenarios/*.yaml /godzilla/scenario/
