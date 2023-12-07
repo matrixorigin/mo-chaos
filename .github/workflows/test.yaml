@@ -116,6 +116,10 @@ jobs:
           kubectl delete jobs.batch $data_scene -n $NAMESPACE
         shell: bash
         name: Run
+      - run: |
+          ls
+          pwd
+        name: Run
       - name: Upload logs
         uses: actions/upload-artifact@v3
         with:
