@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: create-databases-with-log-pod-del-2
-        image: matrixorigin/mo-chaos-data:1.2.3-beta4
+        image: matrixorigin/mo-chaos-data:1.2.3-beta5
         env:
           - name: DURATION
             value: "1800"
@@ -24,6 +24,8 @@ spec:
             value: $ACTIONS_RUNNER_POD_NAME
           - name: GITHUB_WORKSPACE
             value: $GITHUB_WORKSPACE
+          - name: NEW_CHAOS
+            value: "true"
         command:
           - "python"
           - "main.py"
