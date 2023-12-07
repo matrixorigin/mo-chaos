@@ -3,7 +3,7 @@ name: Docker Image CI
 on:
   push:
     branches:
-#      - dev
+      - dev
     tags:
       - '*'
 
@@ -27,4 +27,4 @@ jobs:
           tags: matrixorigin/mo-chaos-driller:${{ github.ref_name }},matrixorigin/mo-chaos-driller:latest
           platforms: linux/amd64
           file: ./litmus/scenarios/Dockerfile
-          context: ./litmus/scenarios
+          context: litmus/scenarios
