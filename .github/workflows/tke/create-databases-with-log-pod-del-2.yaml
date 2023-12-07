@@ -15,7 +15,7 @@ spec:
         image: matrixorigin/mo-chaos-data:1.2.3-beta10
         env:
           - name: DURATION
-            value: "60"
+            value: "1800"
           - name: LOCAL_DEBUG
             value: "false"
           - name: CHAOS_JOBS
