@@ -1,7 +1,7 @@
 from litmus.scenarios.base import Base
 
 
-class CnPodDelete(Base):
+class CnPodDeleteAll(Base):
     def __init__(self):
         super().__init__()
-        self.name = 'cn-pod-delete'
+        self.name = 'cn-pod-delete-all'

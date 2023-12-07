@@ -1,0 +1,11 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: AzureChaos
+metadata:
+  name: vm-restart-example
+  namespace: chaos-mesh
+spec:
+  action: vm-restart
+  secretName: 'cloud-key-secret'
+  subscriptionID: 'your-subscription-id'
+  resourceGroupName: 'your-resource-group-name'
+  vmName: 'your-vm-name'

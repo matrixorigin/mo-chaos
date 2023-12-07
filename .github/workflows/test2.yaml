@@ -1,0 +1,24 @@
+name: Just for Test2
+on:
+  workflow_dispatch:
+    inputs:
+      scene:
+        type: choice
+        required: true
+        description: Chaos data to be created
+        options:
+          - create-databases
+
+jobs:
+  deploy_mo_cluster:
+    name: Run Chaos, ${{ inputs.scene }}
+    runs-on: amd64-tke-dind
+    steps:
+      - name: Deploy
+        env:
+          COS_AK: ${{ secrets.COS_AK }}
+          COS_SK: ${{ secrets.COS_SK }}
+        run: |
+          env
+          sleep infinity
+        shell: bash

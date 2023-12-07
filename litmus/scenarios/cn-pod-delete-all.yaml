@@ -212,6 +212,9 @@ spec:
                     - name: pod-delete
                       spec:
                         components:
+                          statusCheckTimeouts:
+                            delay: 2
+                            timeout: 360
                           env:
                             - name: TOTAL_CHAOS_DURATION
                               value: "$duration"
@@ -220,7 +223,7 @@ spec:
                             - name: FORCE
                               value: "false"
                             - name: PODS_AFFECTED_PERC
-                              value: ""
+                              value: "100"
       outputs: {}
       metadata:
         labels:

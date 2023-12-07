@@ -1,0 +1,12 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: AzureChaos
+metadata:
+  name: vm-stop-example
+  namespace: chaos-mesh
+spec:
+  action: vm-stop
+  secretName: 'cloud-key-secret'
+  subscriptionID: 'your-subscription-id'
+  resourceGroupName: 'your-resource-group-name'
+  vmName: 'your-vm-name'
+  duration: '5m'

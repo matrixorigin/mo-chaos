@@ -1,44 +1,43 @@
-# param
-# duration: run duration, default: 60
-# interval: kill every seconds, default: 10
-# namespace: cn namespace, default is the current namespace chaos pod running
-# label: label for cn nodes, default: matrixorigin.io/component=CNSet
-kind: Workflow
 apiVersion: argoproj.io/v1alpha1
+kind: Workflow
 metadata:
-  name: cn-pod-delete
+  name: cn-pod-cpu-hog
   namespace: litmus
 spec:
+  arguments:
+    parameters:
+      - name: adminModeNamespace
+        value: litmus
+  entrypoint: custom-chaos
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: argo-chaos
   templates:
     - name: custom-chaos
-      inputs: {}
-      outputs: {}
-      metadata: {}
       steps:
         - - name: install-chaos-experiments
             template: install-chaos-experiments
-            arguments: {}
-        - - name: pod-delete
-            template: pod-delete
-            arguments: {}
+        - - name: pod-cpu-hog-3n0
+            template: pod-cpu-hog-3n0
     - name: install-chaos-experiments
       inputs:
         artifacts:
-          - name: pod-delete
-            path: /tmp/pod-delete.yaml
+          - name: pod-cpu-hog-3n0
+            path: /tmp/pod-cpu-hog-3n0.yaml
             raw:
               data: >
                 apiVersion: litmuschaos.io/v1alpha1
 
                 description:
                   message: |
-                    Deletes a pod belonging to a deployment/statefulset/daemonset
+                    Injects cpu consumption on pods belonging to an app deployment
                 kind: ChaosExperiment
 
                 metadata:
-                  name: pod-delete
+                  name: pod-cpu-hog
                   labels:
-                    name: pod-delete
+                    name: pod-cpu-hog
                     app.kubernetes.io/part-of: litmus
                     app.kubernetes.io/component: chaosexperiment
                     app.kubernetes.io/version: 2.14.0
@@ -149,22 +148,30 @@ spec:
                     imagePullPolicy: Always
                     args:
                       - -c
-                      - ./experiments -name pod-delete
+                      - ./experiments -name pod-cpu-hog
                     command:
                       - /bin/bash
                     env:
                       - name: TOTAL_CHAOS_DURATION
-                        value: "15"
-                      - name: RAMP_TIME
-                        value: ""
-                      - name: FORCE
-                        value: "true"
-                      - name: CHAOS_INTERVAL
-                        value: "5"
+                        value: "60"
+                      - name: CPU_CORES
+                        value: "1"
+                      - name: CPU_LOAD
+                        value: "100"
                       - name: PODS_AFFECTED_PERC
+                        value: ""
+                      - name: RAMP_TIME
                         value: ""
                       - name: LIB
                         value: litmus
+                      - name: LIB_IMAGE
+                        value: litmuschaos/go-runner:2.14.0
+                      - name: STRESS_IMAGE
+                        value: alexeiled/stress-ng:latest-ubuntu
+                      - name: CONTAINER_RUNTIME
+                        value: docker
+                      - name: SOCKET_PATH
+                        value: /var/run/docker.sock
                       - name: TARGET_PODS
                         value: ""
                       - name: NODE_LABEL
@@ -172,72 +179,60 @@ spec:
                       - name: SEQUENCE
                         value: parallel
                     labels:
-                      name: pod-delete
+                      name: pod-cpu-hog
                       app.kubernetes.io/part-of: litmus
                       app.kubernetes.io/component: experiment-job
+                      app.kubernetes.io/runtime-api-usage: "true"
                       app.kubernetes.io/version: 2.14.0
-      outputs: {}
-      metadata: {}
       container:
-        name: ""
-        image: litmuschaos/k8s:2.14.0
+        args:
+          - kubectl apply -f /tmp/pod-cpu-hog-3n0.yaml -n
+            {{workflow.parameters.adminModeNamespace}} &&  sleep 30
         command:
           - sh
           - -c
-        args:
-          - kubectl apply -f /tmp/pod-delete.yaml -n
-            {{workflow.parameters.adminModeNamespace}} &&  sleep 30
-        resources: {}
-    - name: pod-delete
+        image: litmuschaos/k8s:2.14.0
+    - name: pod-cpu-hog-3n0
       inputs:
         artifacts:
-          - name: pod-delete
-            path: /tmp/chaosengine-pod-delete.yaml
+          - name: pod-cpu-hog-3n0
+            path: /tmp/chaosengine-pod-cpu-hog-3n0.yaml
             raw:
               data: |
                 apiVersion: litmuschaos.io/v1alpha1
                 kind: ChaosEngine
                 metadata:
                   namespace: "{{workflow.parameters.adminModeNamespace}}"
-                  generateName: pod-delete
+                  generateName: pod-cpu-hog-3n0
                   labels:
                     workflow_run_id: "{{workflow.uid}}"
                 spec:
+                  engineState: active
                   appinfo:
                     appns: $namespace
                     applabel: $label
-                  engineState: active
                   chaosServiceAccount: litmus-admin
                   experiments:
-                    - name: pod-delete
+                    - name: pod-cpu-hog
                       spec:
                         components:
                           env:
                             - name: TOTAL_CHAOS_DURATION
                               value: "$duration"
-                            - name: CHAOS_INTERVAL
-                              value: "$interval"
-                            - name: FORCE
-                              value: "false"
+                            - name: CPU_CORES
+                              value: "1"
+                            - name: CPU_LOAD
+                              value: "$cpu_load"
                             - name: PODS_AFFECTED_PERC
-                              value: ""
-      outputs: {}
-      metadata:
-        labels:
-          weight: "10"
+                              value: "100"
+                            - name: TARGET_PODS
+                              value: $target_pods
+                            - name: CONTAINER_RUNTIME
+                              value: containerd
+                            - name: SOCKET_PATH
+                              value: /var/run/containerd/containerd.sock
       container:
-        name: ""
-        image: litmuschaos/litmus-checker:2.14.0
         args:
-          - -file=/tmp/chaosengine-pod-delete.yaml
+          - -file=/tmp/chaosengine-pod-cpu-hog-3n0.yaml
           - -saveName=/tmp/engine-name
-        resources: {}
-  entrypoint: custom-chaos
-  arguments:
-    parameters:
-      - name: adminModeNamespace
-        value: litmus
-  serviceAccountName: argo-chaos
-  securityContext:
-    runAsUser: 1000
-    runAsNonRoot: true
+        image: litmuschaos/litmus-checker:2.14.0

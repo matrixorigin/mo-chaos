@@ -4,6 +4,7 @@ import os
 from yaml import Loader
 
 from litmus.cluster import get_cluster_id
+from litmus.kube import fetch_pod_names
 from litmus.project import get_project_id
 from litmus.workflow import create_workflow, ChaosWorkflowRequest, get_workflow_run_stats
 import yaml
@@ -19,13 +20,17 @@ test_name = os.getenv('NAME') or 'cn-pod-delete'
 def load_scenario_class() -> dict:
     # iterate all scenario class
     for f in os.scandir('litmus/scenarios'):
-        if f.name.endswith('.py'):
-            s_module = importlib.import_module(f'litmus.scenarios.{f.name.replace('.py', '')}')
-            for _, obj in inspect.getmembers(s_module):
-                if inspect.isclass(obj):
-                    s_class = obj()
-                    if s_class.name == test_name:
-                        return s_class.__dict__
+        if not f.name.lower().startswith('base'):
+            if f.name.endswith('.py'):
+                s_module = importlib.import_module(f'litmus.scenarios.{f.name.replace('.py', '')}')
+                for _, obj in inspect.getmembers(s_module):
+                    if inspect.isclass(obj) and obj.__name__.lower() != 'base':
+                        s_class = obj()
+                        if s_class.name == test_name:
+                            if s_class.__dict__['all_pods']:
+                                s_class.__dict__['target_pods'] = fetch_pod_names(s_class.__dict__['namespace'],
+                                                                                  s_class.__dict__['label'])
+                            return s_class.__dict__
     raise ModuleNotFoundError(f'test class for {test_name} not found')
 
 
@@ -57,7 +62,7 @@ if __name__ == '__main__':
     while 1:
         try:
             phase = get_workflow_run_stats(project_id, [workflow_id])
-            if phase.lower() not in ['running', 'pending'] or phase != '':
+            if phase.lower() not in ['running', 'pending'] and phase != '':
                 print(f'{generated_name} ended at {datetime.now().ctime()}, status {phase}')
                 break
         except IndexError:

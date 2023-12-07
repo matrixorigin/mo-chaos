@@ -1,0 +1,12 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: GCPChaos
+metadata:
+  name: node-reset-example
+  namespace: chaos-mesh
+spec:
+  action: node-reset
+  secretName: 'cloud-key-secret'
+  project: 'your-project-id'
+  zone: 'your-zone'
+  instance: 'your-instance-name'
+  duration: '5m'

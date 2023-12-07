@@ -1,0 +1,10 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: AWSChaos
+metadata:
+  name: ec2-restart-example
+  namespace: chaos-mesh
+spec:
+  action: ec2-restart
+  secretName: 'cloud-key-secret'
+  awsRegion: 'us-east-2'
+  ec2Instance: 'your-ec2-instance-id'

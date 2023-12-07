@@ -6,7 +6,7 @@
 kind: Workflow
 apiVersion: argoproj.io/v1alpha1
 metadata:
-  name: cn-pod-delete
+  name: dn-pod-delete
   namespace: litmus
 spec:
   templates:

@@ -1,0 +1,14 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: AzureChaos
+metadata:
+  name: disk-detach-example
+  namespace: chaos-mesh
+spec:
+  action: disk-detach
+  secretName: 'cloud-key-secret'
+  subscriptionID: 'your-subscription-id'
+  resourceGroupName: 'your-resource-group-name'
+  vmName: 'your-vm-name'
+  diskName: 'your-disk-name'
+  lun: 'your-disk-lun'
+  duration: '5m'
