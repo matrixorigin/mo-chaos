@@ -12,14 +12,14 @@ spec:
     spec:
       containers:
       - name: create-databases-with-log-pod-del-2
-        image: matrixorigin/mo-chaos-data:1.2.3-beta3
+        image: matrixorigin/mo-chaos-data:1.2.3-beta4
         env:
           - name: DURATION
             value: "1800"
           - name: LOCAL_DEBUG
             value: "false"
           - name: CHAOS_JOBS
-            value: "log-pod-delete"
+            value: "log-pod-delete-2"
           - name: ACTIONS_RUNNER_POD_NAME
             value: $ACTIONS_RUNNER_POD_NAME
           - name: GITHUB_WORKSPACE
