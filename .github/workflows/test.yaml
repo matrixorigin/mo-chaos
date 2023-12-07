@@ -15,114 +15,114 @@ on:
           - create-databases-with-log-pod-del-2
 
 jobs:
-#  deploy_mo_cluster:
-#    name: Deploy
-#    runs-on: amd64-tke-dind
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-chaos-driller
-#          path: .
-#          ref: main
-#      - name: Deploy
-#        env:
-#          COS_AK: ${{ secrets.COS_AK }}
-#          COS_SK: ${{ secrets.COS_SK }}
-#        run: |
-#          chmod +x .github/workflows/tke/install-mo.sh
-#          .github/workflows/tke/install-mo.sh
-#        shell: bash
-#      - name: Upload mo cluster artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: |
-#            name
-#  wait:
-#    name: Wait Until Ready
-#    runs-on: amd64-tke-dind
-#    timeout-minutes: 30
-#    needs:
-#      - deploy_mo_cluster
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-chaos-driller
-#          path: .
-#          ref: main
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
-#      - name: Wait
-#        run: |
-#          chmod +x .github/workflows/tke/wait.sh
-#          .github/workflows/tke/wait.sh
-#        shell: bash
-
-#  prep_data:
-#    name: Prepare CN Data
-#    runs-on: amd64-tke-dind
-#    needs:
-#      - wait
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-chaos-driller
-#          path: .
-#          ref: main
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
-#      - name: Clone Data
-#        run: |
-#          chmod +x .github/workflows/tke/prepare-cn-data.sh
-#          .github/workflows/tke/prepare-cn-data.sh
-#        shell: bash
-
-  chaos:
-    name: Run Chaos
+  deploy_mo_cluster:
+    name: Deploy
     runs-on: amd64-tke-dind
-#    needs:
-#      - wait
     steps:
       - uses: actions/checkout@v4
         with:
           repository: matrixorigin/mo-chaos-driller
           path: .
           ref: main
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
-      - run: |
-          set -ex
-          data_scene=${{ inputs.scene }}
-          name=lv95jblymqz5t75d
-          NAMESPACE=chaos-$name
-          sed -i "s%\$ACTIONS_RUNNER_POD_NAME%$ACTIONS_RUNNER_POD_NAME%g" .github/workflows/tke/$data_scene.yaml
-          sed -i "s%\$GITHUB_WORKSPACE%$GITHUB_WORKSPACE%g" .github/workflows/tke/$data_scene.yaml
-          cat .github/workflows/tke/$data_scene.yaml
-          kubectl apply -f .github/workflows/tke/$data_scene.yaml -n $NAMESPACE
-          until kubectl wait --for=condition=ready pod --selector=job-name=$data_scene --timeout=-1s -n $NAMESPACE
-          do
-              sleep 5
-          done
-          kubectl logs -f job.batch/$data_scene -n $NAMESPACE
-          kubectl delete jobs.batch $data_scene -n $NAMESPACE
+      - name: Deploy
+        env:
+          COS_AK: ${{ secrets.COS_AK }}
+          COS_SK: ${{ secrets.COS_SK }}
+        run: |
+          chmod +x .github/workflows/tke/install-mo.sh
+          .github/workflows/tke/install-mo.sh
         shell: bash
-        name: Run
-      - name: Upload logs
+      - name: Upload mo cluster artifact
         uses: actions/upload-artifact@v3
         with:
-          name: logs
+          name: mo-cluster
           path: |
-            stat.yaml
-            *.log
+            name
+  wait:
+    name: Wait Until Ready
+    runs-on: amd64-tke-dind
+    timeout-minutes: 30
+    needs:
+      - deploy_mo_cluster
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: matrixorigin/mo-chaos-driller
+          path: .
+          ref: main
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
+      - name: Wait
+        run: |
+          chmod +x .github/workflows/tke/wait.sh
+          .github/workflows/tke/wait.sh
+        shell: bash
+
+  prep_data:
+    name: Prepare CN Data
+    runs-on: amd64-tke-dind
+    needs:
+      - wait
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: matrixorigin/mo-chaos-driller
+          path: .
+          ref: main
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
+      - name: Clone Data
+        run: |
+          chmod +x .github/workflows/tke/prepare-cn-data.sh
+          .github/workflows/tke/prepare-cn-data.sh
+        shell: bash
+
+#  chaos:
+#    name: Run Chaos
+#    runs-on: amd64-tke-dind
+##    needs:
+##      - wait
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          repository: matrixorigin/mo-chaos-driller
+#          path: .
+#          ref: main
+##      - name: Download mo cluster artifact
+##        uses: actions/download-artifact@v3
+##        with:
+##          name: mo-cluster
+##          path: .
+#      - run: |
+#          set -ex
+#          data_scene=${{ inputs.scene }}
+#          name=lv95jblymqz5t75d
+#          NAMESPACE=chaos-$name
+#          sed -i "s%\$ACTIONS_RUNNER_POD_NAME%$ACTIONS_RUNNER_POD_NAME%g" .github/workflows/tke/$data_scene.yaml
+#          sed -i "s%\$GITHUB_WORKSPACE%$GITHUB_WORKSPACE%g" .github/workflows/tke/$data_scene.yaml
+#          cat .github/workflows/tke/$data_scene.yaml
+#          kubectl apply -f .github/workflows/tke/$data_scene.yaml -n $NAMESPACE
+#          until kubectl wait --for=condition=ready pod --selector=job-name=$data_scene --timeout=-1s -n $NAMESPACE
+#          do
+#              sleep 5
+#          done
+#          kubectl logs -f job.batch/$data_scene -n $NAMESPACE
+#          kubectl delete jobs.batch $data_scene -n $NAMESPACE
+#        shell: bash
+#        name: Run
+#      - name: Upload logs
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: logs
+#          path: |
+#            stat.yaml
+#            *.log
 
 #  Cleanup:
 #    runs-on: amd64-tke-dind
