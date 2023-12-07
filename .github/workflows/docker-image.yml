@@ -27,4 +27,3 @@ jobs:
           tags: matrixorigin/mo-chaos-driller:${{ github.ref_name }},matrixorigin/mo-chaos-driller:latest
           platforms: linux/amd64
           file: ./litmus/scenarios/Dockerfile
-          context: litmus/scenarios
