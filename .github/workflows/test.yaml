@@ -125,24 +125,24 @@ jobs:
             stat.yaml
             *.log
 
-#  Cleanup:
-#    runs-on: amd64-tke-dind
-#    if: always()
-#    needs:
-#      - chaos
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          repository: matrixorigin/mo-chaos-driller
-#          path: .
-#          ref: main
-#      - name: Download mo cluster artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: mo-cluster
-#          path: .
-#      - name: Cleanup
-#        run: |
-#          chmod +x .github/workflows/tke/clean-mo.sh
-#          .github/workflows/tke/clean-mo.sh
-#        shell: bash
+  Cleanup:
+    runs-on: amd64-tke-dind
+    if: always()
+    needs:
+      - chaos
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: matrixorigin/mo-chaos-driller
+          path: .
+          ref: main
+      - name: Download mo cluster artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: mo-cluster
+          path: .
+      - name: Cleanup
+        run: |
+          chmod +x .github/workflows/tke/clean-mo.sh
+          .github/workflows/tke/clean-mo.sh
+        shell: bash
