@@ -1,0 +1,8 @@
+- - type: litmus-pod-delete
+    name: delete-log-pod
+    namespace: test-chaos
+    config:
+      TOTAL_CHAOS_DURATION: '30'
+      APP_LABEL: app=debug
+      CHAOS_INTERVAL: '10'
+      APP_NAMESPACE: test-chaos
