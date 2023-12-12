@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: create-databases-with-cn-pod-io-stress
-        image: matrixorigin/mo-chaos-data:1.2.4-beta3
+        image: matrixorigin/mo-chaos-data:1.2.4-beta4
         env:
           - name: DURATION
             value: "1800"
