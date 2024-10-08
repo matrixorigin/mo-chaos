@@ -1,8 +1,0 @@
-- - type: litmus-pod-delete
-    name: delete-log-pod
-    namespace: test-chaos
-    config:
-      TOTAL_CHAOS_DURATION: '1800'
-      PODS_AFFECTED_PERC: '70'
-      APP_LABEL: matrixorigin.io/component=LogSet
-      CHAOS_INTERVAL: '30'
