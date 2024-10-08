@@ -1,0 +1,22 @@
+tasks:
+- name: mo-tpcc
+  work-path: mo-tpcc
+  run-steps:
+    - command: ./runBenchmark.sh props.mo
+  verify:
+    - command: ./runVerify.sh props.mo
+  verify-mode: parallel
+  log-paths:
+    - path: benchmarksql-info.log
+    - path: benchmarksql-error-10-2.log
+- name: mo-tpcc-2
+  work-path: mo-tpcc-2
+  run-steps:
+    - command: ./runBenchmark.sh props.mo
+  verify:
+    - command: ./runVerify.sh props.mo
+  verify-mode: last
+  verify-retry-times: 3
+  log-paths:
+    - path: benchmarksql-info.log
+    - path: benchmarksql-error-10-2.log

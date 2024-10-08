@@ -1,0 +1,79 @@
+chaos:
+  cm-chaos:
+    - name: task_a1
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: PodChaos
+        metadata:
+          name: pod-kill-01
+          namespace: mocluster2
+        spec:
+          action: pod-kill
+          mode: one
+          selector:
+            namespaces:
+              - mocluster2
+            labelSelectors:
+              'matrixorigin.io/component': 'CNSet'
+      times: 2
+      interval: 10
+      is_delete_after_apply: true
+    - name: task_a2
+      kubectl_yaml: |
+        kind: NetworkChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        metadata:
+          namespace: mocluster2
+          name: network-delay-pod
+        spec:
+          selector:
+            namespaces:
+              - mocluster2
+            labelSelectors:
+              'matrixorigin.io/component': 'CNSet'
+          mode: all
+          action: delay # 网络故障类型，延迟
+          duration: 20m # 持续时间, 这个为了持续观察，所以配置的时间较长
+          delay:
+            latency: 100ms # 延迟时间
+            correlation: '0.5' # 表示延迟时间的时间长度与前一次延迟时长的相关性
+            jitter: 20ms # 表示延迟时间的变化范围
+      times: 3
+      interval: 10
+      is_delete_after_apply: true
+  sql-chaos:
+    - name: sql-chaos01
+      type: database_flush_chaos
+      dbname: tpcc
+      interval: 10
+      times: 2
+    - name: sql-chaos02
+      type: table_flush_chaos
+      dbname: tpcc
+      tablename: bmsql_new_order
+      interval: 10
+      times: 2
+    - name: sql-chaos03
+      type: database_merge_chaos
+      dbname: tpcc
+      interval: 10
+      times: 2
+    - name: sql-chaos04
+      type: table_merge_chaos
+      dbname: tpcc
+      tablename: bmsql_new_order
+      interval: 10
+      times: 2
+    - name: sql-chaos05
+      type: checkpoint_chaos
+      interval: 10
+      times: 2
+  chaos_combination:
+    mode: "in-turn"  # or "random-turn"
+    times: 1          # number of rounds or tasks to execute
+  mo-env:
+      host: "10.222.4.14"
+      user: "dump"
+      port: 31429
+      password: "111"
+  namespace: "mocluster2"
