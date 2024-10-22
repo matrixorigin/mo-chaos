@@ -27,10 +27,11 @@ class Subtask_Test_Thread(threading.Thread):
     def run(self):
         work_path = os.path.join(self.tool_parent_dir_path, self.task['work-path'])
         self.logger.info(f"Starting task: {self.task['name']} in {work_path}")
-        os.chdir(work_path)
+
         for step in self.task['run-steps']:
             self.logger.info(f"Executing {self.task['name']} Subtask_Test command: {step['command']}")
             # Execute the command and redirect output to the log file
+            os.chdir(work_path)
             process = subprocess.Popen(step['command'], shell=True, stderr=subprocess.STDOUT)
             process.wait()  # Wait for the command to complete
 
@@ -56,7 +57,6 @@ class Subtask_Verify_Thread(threading.Thread):
     def run(self):
         work_path = os.path.join(self.tool_parent_dir_path, self.task['work-path'])
         self.logger.info(f"Starting task: {self.task['name']} in {work_path}")
-        os.chdir(work_path)
         # 如果需要等待subtaskA结束
         if not self.is_parallel:
             self.subtask_test_event.wait()
@@ -64,6 +64,7 @@ class Subtask_Verify_Thread(threading.Thread):
             for step in self.task['verify']:
                 self.logger.info(f"Executing {self.task['name']} Subtask_Verify command: {step['command']}")
                 # Execute the command and redirect output to the log file
+                os.chdir(work_path)
                 process = subprocess.Popen(step['command'], shell=True, stderr=subprocess.STDOUT)
                 process.wait()  # Wait for the command to complete
                 if process.returncode == 0:
