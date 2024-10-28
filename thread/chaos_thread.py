@@ -264,7 +264,6 @@ class Chaos_Thread:
                 break
             self.logger.info(f"Executing Chaos Task: {task_name}, iteration {i + 1}")
             self.execute_chaos(task)
-            time.sleep(interval)
 
     def stop(self):
         self.stop_event.set()
