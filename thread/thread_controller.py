@@ -21,11 +21,10 @@ class Thread_Controller:
     def execute_sql(self, sql):
         try:
             conn = pymysql.connect(
-                host=args.host,
-                port=args.port,
-                user=args.user,
-                password=args.password,
-                db=args.db,
+                host='10.222.6.253',
+                port=6001,
+                user='tpcc_test:admin',
+                password='111'
             )
             cursor = conn.cursor()
             cursor.execute(sql)
