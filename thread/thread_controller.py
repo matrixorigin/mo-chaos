@@ -24,7 +24,8 @@ class Thread_Controller:
                 host='10.222.6.253',
                 port=6001,
                 user='tpcc_test:admin',
-                password='111'
+                password='111',
+                autocommit=True
             )
             cursor = conn.cursor()
             cursor.execute(sql)
