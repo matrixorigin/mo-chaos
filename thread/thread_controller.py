@@ -16,6 +16,7 @@ class Thread_Controller:
         self.chaos_class = Chaos_Thread(chaos_yaml, cm_chaos_yml_path, logger)
         self.test_class = Test_Thread(test_yaml, logger, test_tool_parent_dir_path, test_tool_report_parent_dir_path)
         self.logger = logger
+        self.db_counter = 0
 
     def execute_sql(self, sql):
         try:
