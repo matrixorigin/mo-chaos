@@ -68,6 +68,25 @@ class Thread_Controller:
         self.execute_sql(sql_to_run)
         self.update_props_file_db(target_db)
 
+    def restart_test_tool(self):
+        """重启测试工具"""
+        self.logger.info("Restarting test tool...")
+
+        self.test_class.stop()
+
+        time.sleep(5)
+
+        self.test_class = Test_Thread(
+            self.test_class.test_yaml_data,
+            self.logger,
+            self.test_tool_parent_dir_path,
+            self.test_class.test_tool_report_parent_dir_path
+        )
+
+        test_thread = threading.Thread(target=self.test_class.execute_tasks)
+        test_thread.start()
+        return test_thread
+
     def start(self):
         self.perform_database_switch()
         test_thread = threading.Thread(target=self.test_class.execute_tasks)
@@ -76,7 +95,17 @@ class Thread_Controller:
         chaos_thread = threading.Thread(target=self.chaos_class.execute_tasks)
         chaos_thread.start()
 
-        self.test_class.stop_event.wait()
+        while not self.test_class.stop_event.is_set():
+            # 等待一段时间后切换数据库
+            time.sleep(10)  # 每小时的切换间隔，可根据需要调整
+
+            # 执行数据库切换
+            self.perform_database_switch()
+
+            # 重启测试工具
+            test_thread = self.restart_test_tool()
+
+        # self.test_class.stop_event.wait()
 
         self.chaos_class.stop()
 
