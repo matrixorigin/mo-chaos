@@ -6,6 +6,7 @@ import random
 import pymysql
 import logging
 import os
+import re
 from datetime import datetime
 import shutil
 from thread.chaos_thread import *
