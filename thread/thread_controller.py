@@ -57,7 +57,7 @@ class Thread_Controller:
         self.db_counter += 1
         if self.db_counter % 2 == 1:
             target_db = "tpcc_10_bak"
-            sql_to_run = "drop database if exists tpcc_10_bak; create database tpcc_10_bak clone tpcc;"
+            sql_to_run = "drop database if exists tpcc_10_bak; create database tpcc_10_bak clone tpcc_10;"
         else:
             target_db = "tpcc_10"
             sql_to_run = "drop database if exists tpcc_10; create database tpcc_10 clone tpcc_10_bak;"
