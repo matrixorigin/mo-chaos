@@ -38,7 +38,7 @@ class Thread_Controller:
             raise
 
     def update_props_file_db(self, db_name):
-        tpcc_path = os.path.join(os.environ.get('GITHUB_WORKSPACE'), 'test-tool/mo-tpcc')
+        tpcc_path = os.path.join(os.environ.get('GITHUB_WORKSPACE'), 'mo-chaos/test-tool/mo-tpcc')
         props_file_path = os.path.join(tpcc_path, "props.mo")
         try:
             with open(props_file_path, 'r') as f:
