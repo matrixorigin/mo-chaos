@@ -56,11 +56,11 @@ class Thread_Controller:
         """根据计数器执行数据库切换和配置文件更新"""
         self.db_counter += 1
         if self.db_counter % 2 == 1:
-            target_db = "tpcc_bak"
-            sql_to_run = "drop database if exists tpcc_bak; create database tpcc_bak clone tpcc;"
+            target_db = "tpcc_10_bak"
+            sql_to_run = "drop database if exists tpcc_10_bak; create database tpcc_10_bak clone tpcc;"
         else:
-            target_db = "tpcc"
-            sql_to_run = "drop database if exists tpcc; create database tpcc clone tpcc_bak;"
+            target_db = "tpcc_10"
+            sql_to_run = "drop database if exists tpcc_10; create database tpcc_10 clone tpcc_10_bak;"
 
         self.logger.info(f"Database switch cycle #{self.db_counter}. Target DB: {target_db}")
 
