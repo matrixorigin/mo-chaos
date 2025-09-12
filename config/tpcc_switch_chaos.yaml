@@ -1,0 +1,17 @@
+# 第一次：tpcc_10 -> tpcc_10_bak
+- name: switch_to_bak
+  sql: |
+    drop database if exists tpcc_10_bak;
+    create database tpcc_10_bak clone tpcc_10;
+  times: 1
+  interval: 600          # 与 pod-kill 保持一致
+  is_delete_after_apply: true
+
+# 第二次：tpcc_10_bak -> tpcc_10
+- name: switch_back
+  sql: |
+    drop database if exists tpcc_10;
+    create database tpcc_10 clone tpcc_10_bak;
+  times: 1
+  interval: 600
+  is_delete_after_apply: true

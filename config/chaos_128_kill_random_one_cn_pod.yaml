@@ -1,0 +1,43 @@
+chaos:
+  cm-chaos:
+    - name: task_a1
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: PodChaos
+        metadata:
+          name: pod-kill-01
+          namespace: mocluster
+        spec:
+          action: pod-kill
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'CNSet'
+      times: 1
+      interval: 600
+      is_delete_after_apply: true
+  sql-chaos:
+    - name: switch_to_bak
+      sql: |
+        drop database if exists tpcc_10_bak;
+        create database tpcc_10_bak clone tpcc_10;
+      times: 1
+      interval: 600
+      is_delete_after_apply: true
+    - name: switch_back
+      sql: |
+        drop database if exists tpcc_10;
+        create database tpcc_10 clone tpcc_10_bak;
+      times: 1
+      interval: 600
+      is_delete_after_apply: true
+  chaos_combination:
+    mode: "in-turn"  # or "random-turn"
+  mo-env:
+    host: "127.0.0.1"
+    user: "dump"
+    port: 6001
+    password: "111"
+  namespace: mocluster

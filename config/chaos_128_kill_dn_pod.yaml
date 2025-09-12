@@ -1,0 +1,30 @@
+chaos:
+  cm-chaos:
+    - name: task_a1
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: PodChaos
+        metadata:
+          name: pod-kill-01
+          namespace: mocluster
+        spec:
+          action: pod-kill
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'DNSet'
+      times: 1
+      interval: 600
+      is_delete_after_apply: true
+  sql-chaos:
+
+  chaos_combination:
+    mode: "in-turn"  # or "random-turn"
+  mo-env:
+    host: "127.0.0.1"
+    user: "dump"
+    port: 6001
+    password: "111"
+  namespace: mocluster

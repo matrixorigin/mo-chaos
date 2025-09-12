@@ -1,0 +1,21 @@
+tasks:
+  - name: mo-tpcc
+    work-path: mo-tpcc
+    run-steps:
+      - command: ./runBenchmark.sh props.mo > tpcc.log 2>&1
+    verify:
+      - command: ./runVerify.sh props.mo >> check.log 2>&1
+    verify-mode: parallel
+    log-paths:
+      - path: tpcc.log
+      - path: check.log
+  - name: mo-load
+    work-path: mo-load
+    run-steps:
+      - command: ./start.sh -c cases/sysbench/simple_insert_10_100000_auto/ -d {duration} -g -i 10 -b sbtest > mo-load.log 2>&1
+    verify:
+      - command: cat report/*/error/* > mo-load-check.log 2>&1
+    verify-mode: after
+    log-paths:
+      - path: mo-load.log
+      - path: mo-load-check.log
