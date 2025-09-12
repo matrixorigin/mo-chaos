@@ -2,6 +2,7 @@ tasks:
   - name: mo-tpcc
     work-path: mo-tpcc
     run-steps:
+      - command: chmod +x ../../config/switch_tpcc_db.sh
       - command: ../../config/switch_tpcc_db.sh
       - command: ./runBenchmark.sh props.mo > tpcc.log 2>&1
     verify:
