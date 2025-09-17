@@ -7,9 +7,9 @@ PASS=111
 # 1. 判断当前该用哪个库
 if mysql -h$HOST -P$PORT -u$USER -p$PASS -e "use tpcc_10_bak; select 1;" 2>/dev/null
 then
-    NEXT_DB=tpcc_10
-else
     NEXT_DB=tpcc_10_bak
+else
+    NEXT_DB=tpcc_10
 fi
 
 
