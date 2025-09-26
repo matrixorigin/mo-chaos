@@ -28,6 +28,12 @@ class Chaos_Thread:
         self.logger = logger
         self.stop_event = threading.Event()
         self.db_config = self.chaos_yaml_data.get('chaos', {}).get('mo-env', {})
+        # Normalize types in db_config
+        if 'port' in self.db_config:
+            try:
+                self.db_config['port'] = int(self.db_config['port'])
+            except Exception:
+                pass
 
     # 顺序执行
     def execute_tasks(self):
@@ -97,6 +103,30 @@ class Chaos_Thread:
             self.logger.error(f"Error {e}")
         finally:
             # Close the connection
+            if connection:
+                connection.close()
+
+    def execute_raw_sql(self, task, db_config):
+        connection = None
+        self.logger.info(f"execute raw sql chaos: {task['name']}")
+        try:
+            connection = pymysql.connect(**db_config)
+            statements_text = task.get('sql', '')
+            # Split by semicolon while preserving order; ignore empty statements
+            statements = [stmt.strip() for stmt in statements_text.split(';') if stmt.strip()]
+            if not statements:
+                self.logger.info("no sql statements to execute")
+                return
+            for _ in range(task.get('times', 1)):
+                with connection.cursor() as cursor:
+                    for stmt in statements:
+                        self.logger.info(f"execute sql {stmt}")
+                        cursor.execute(stmt)
+                    connection.commit()
+                time.sleep(task.get('interval', 0))
+        except pymysql.MySQLError as e:
+            self.logger.error(f"Error {e}")
+        finally:
             if connection:
                 connection.close()
 
@@ -251,6 +281,8 @@ class Chaos_Thread:
 
         if 'kubectl_yaml' in task:
             self.execute_cm_chaos(task)
+        elif 'sql' in task:
+            self.execute_raw_sql(task, self.db_config)
         else:
             self.execute_sql_chaos(task, self.db_config)
 
