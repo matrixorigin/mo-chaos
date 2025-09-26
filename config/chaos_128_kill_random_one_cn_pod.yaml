@@ -36,8 +36,8 @@ chaos:
   chaos_combination:
     mode: "in-turn"  # or "random-turn"
   mo-env:
-    host: "127.0.0.1"
-    user: "dump"
+    host: "10.222.6.253"
+    user: "tpcc_test:admin"
     port: 6001
     password: "111"
   namespace: mocluster
