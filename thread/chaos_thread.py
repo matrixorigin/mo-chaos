@@ -35,6 +35,44 @@ class Chaos_Thread:
             except Exception:
                 pass
 
+    def _switch_tpcc_props(self, target_db_name):
+        """
+        After SQL chaos that logically switches DBs, update TPCC's props.mo to point
+        to the desired database by invoking config/switch_tpcc_db.sh in the mo-tpcc
+        work directory. Uses current mo-env (db_config) for connection overrides.
+        """
+        try:
+            repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            script_path = os.path.join(repo_root, 'config', 'switch_tpcc_db.sh')
+            tpcc_work_dir = os.path.join(repo_root, 'test-tool', 'mo-tpcc')
+
+            # Ensure script is executable
+            subprocess.run(['chmod', '+x', script_path], check=True)
+
+            # Prepare env overrides to avoid shell-quoting issues
+            env = os.environ.copy()
+            host = str(self.db_config.get('host', ''))
+            port = str(self.db_config.get('port', ''))
+            user = str(self.db_config.get('user', ''))
+            password = str(self.db_config.get('password', ''))
+            if host:
+                env['HOST'] = host
+            if port:
+                env['PORT'] = str(port)
+            if user:
+                env['USER'] = user
+            if password:
+                env['PASS'] = password
+
+            cmd = [script_path, '--to', target_db_name]
+            self.logger.info(f"switch props.mo using: {cmd} in {tpcc_work_dir} with HOST={env.get('HOST')} PORT={env.get('PORT')} USER={env.get('USER')}")
+            subprocess.run(cmd, cwd=tpcc_work_dir, env=env, check=True, capture_output=True, text=True)
+            self.logger.info("switch props.mo success")
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"switch props.mo failed: {e.stderr}")
+        except Exception as e:
+            self.logger.error(f"switch props.mo unexpected error: {e}")
+
     # 顺序执行
     def execute_tasks(self):
         if self.mode == "in-turn":
@@ -44,7 +82,7 @@ class Chaos_Thread:
         elif self.mode == "parallel":
             self.execute_task_parallel()
         else:
-            logger.error("execute task mode f{self.mode} not exists")
+            self.logger.error(f"execute task mode {self.mode} not exists")
 
     def execute_task_sequential(self):
         while not self.stop_event.is_set():
@@ -123,6 +161,12 @@ class Chaos_Thread:
                         self.logger.info(f"execute sql {stmt}")
                         cursor.execute(stmt)
                     connection.commit()
+                # After executing a logical switch, update props.mo accordingly
+                task_name = task.get('name', '')
+                if task_name == 'switch_to_bak':
+                    self._switch_tpcc_props('tpcc_10_bak')
+                elif task_name == 'switch_back':
+                    self._switch_tpcc_props('tpcc_10')
                 time.sleep(task.get('interval', 0))
         except pymysql.MySQLError as e:
             self.logger.error(f"Error {e}")
