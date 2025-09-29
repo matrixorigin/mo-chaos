@@ -73,6 +73,40 @@ class Chaos_Thread:
         except Exception as e:
             self.logger.error(f"switch props.mo unexpected error: {e}")
 
+    def _toggle_tpcc_props(self):
+        """
+        Toggle TPCC's props.mo between tpcc_10 and tpcc_10_bak using the switch script.
+        """
+        try:
+            repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            script_path = os.path.join(repo_root, 'config', 'switch_tpcc_db.sh')
+            tpcc_work_dir = os.path.join(repo_root, 'test-tool', 'mo-tpcc')
+
+            subprocess.run(['chmod', '+x', script_path], check=True)
+
+            env = os.environ.copy()
+            host = str(self.db_config.get('host', ''))
+            port = str(self.db_config.get('port', ''))
+            user = str(self.db_config.get('user', ''))
+            password = str(self.db_config.get('password', ''))
+            if host:
+                env['HOST'] = host
+            if port:
+                env['PORT'] = str(port)
+            if user:
+                env['USER'] = user
+            if password:
+                env['PASS'] = password
+
+            cmd = [script_path, '--toggle']
+            self.logger.info(f"toggle props.mo using: {cmd} in {tpcc_work_dir} with HOST={env.get('HOST')} PORT={env.get('PORT')} USER={env.get('USER')}")
+            subprocess.run(cmd, cwd=tpcc_work_dir, env=env, check=True, capture_output=True, text=True)
+            self.logger.info("toggle props.mo success")
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"toggle props.mo failed: {e.stderr}")
+        except Exception as e:
+            self.logger.error(f"toggle props.mo unexpected error: {e}")
+
     # 顺序执行
     def execute_tasks(self):
         if self.mode == "in-turn":
@@ -161,12 +195,6 @@ class Chaos_Thread:
                         self.logger.info(f"execute sql {stmt}")
                         cursor.execute(stmt)
                     connection.commit()
-                # After executing a logical switch, update props.mo accordingly
-                task_name = task.get('name', '')
-                if task_name == 'switch_to_bak':
-                    self._switch_tpcc_props('tpcc_10_bak')
-                elif task_name == 'switch_back':
-                    self._switch_tpcc_props('tpcc_10')
                 time.sleep(task.get('interval', 0))
         except pymysql.MySQLError as e:
             self.logger.error(f"Error {e}")
@@ -306,6 +334,8 @@ class Chaos_Thread:
                 result = subprocess.run(command_apply, shell=True, check=True, capture_output=True, text=True)
                 self.logger.info(f"Success: {result.stdout}")
                 time.sleep(task['interval'])
+                # After each CM chaos injection, toggle TPCC props to alternate DB
+                self._toggle_tpcc_props()
                 if task['is_delete_after_apply']:
                     # Clean up after execution
                     self.logger.info(f"Executing: {command_delete}")
