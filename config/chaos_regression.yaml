@@ -17,7 +17,7 @@ chaos:
             labelSelectors:
               'matrixorigin.io/component': 'CNSet'
       times: 1
-      interval: 3
+      interval: 30
       is_delete_after_apply: true
     - name: task_kill_dn
       kubectl_yaml: |
