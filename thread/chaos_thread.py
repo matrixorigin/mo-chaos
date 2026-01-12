@@ -30,6 +30,7 @@ class Chaos_Thread:
         self.db_config = self.chaos_yaml_data.get('chaos', {}).get('mo-env', {})
         # 获取全局任务间隔时间（秒），默认为0（不等待）
         self.global_task_interval = self.chaos_yaml_data.get('chaos', {}).get('chaos_combination', {}).get('task_interval', 0)
+        self.logger.info(f"Global task_interval loaded: {self.global_task_interval} seconds")
 
     # 顺序执行
     def execute_tasks(self):
@@ -50,9 +51,12 @@ class Chaos_Thread:
                 self.run_task(task)
                 # 在任务之间添加间隔时间（包括最后一个任务）
                 task_interval = task.get('task_interval', self.global_task_interval)
+                self.logger.info(f"Task '{task.get('name', 'unknown')}' completed. Task interval: {task_interval} seconds (global: {self.global_task_interval})")
                 if task_interval > 0:
                     self.logger.info(f"Waiting {task_interval} seconds before next task...")
                     time.sleep(task_interval)
+                else:
+                    self.logger.info(f"No wait interval (task_interval={task_interval})")
 
     # 随机执行
     def execute_task_random(self):
@@ -65,9 +69,12 @@ class Chaos_Thread:
                 self.run_task(task)
                 # 在任务之间添加间隔时间（包括最后一个任务）
                 task_interval = task.get('task_interval', self.global_task_interval)
+                self.logger.info(f"Task '{task.get('name', 'unknown')}' completed. Task interval: {task_interval} seconds (global: {self.global_task_interval})")
                 if task_interval > 0:
                     self.logger.info(f"Waiting {task_interval} seconds before next task...")
                     time.sleep(task_interval)
+                else:
+                    self.logger.info(f"No wait interval (task_interval={task_interval})")
 
     # 并行执行
     def execute_task_parallel(self):
