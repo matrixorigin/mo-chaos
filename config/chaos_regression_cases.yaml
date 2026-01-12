@@ -1,0 +1,41 @@
+tasks:
+  - name: mo-tpcc
+    work-path: mo-tpcc
+    run-steps:
+      - command: ./runBenchmark.sh props.mo > tpcc.log 2>&1
+    verify:
+      - command: ./runVerify.sh props.mo >> check.log 2>&1
+    verify-mode: parallel
+    log-paths:
+      - path: tpcc.log
+      - path: check.log
+  - name: mo-load
+    work-path: mo-load
+    run-steps:
+      - command: ./start.sh -c cases/sysbench/simple_insert_10_100000_auto/ -d {duration} -g -i 10 -b sbtest > mo-load.log 2>&1
+    verify:
+      - command: cat report/*/error/* > mo-load-check.log 2>&1
+    verify-mode: after
+    log-paths:
+      - path: mo-load.log
+      - path: mo-load-check.log
+  - name: mo-cdc-test
+    work-path: mo-cdc-test
+    run-steps:
+      - command: ./start_cdc_chaos.sh {duration} > mo-cdc.log 2>&1
+    verify:
+      - command: ./verfiy_cdc_chaos.sh > mo-cdc-verfiy.log 2>&1
+    verify-mode: after
+    log-paths:
+      - path: mo-cdc.log
+      - path: mo-cdc-verfiy.log
+  - name: mo-vector-test
+    work-path: mo-vector-test
+    run-steps:
+      - command: python anli_test.py run-test --host {host_ip} --user dump --query-type mixed --mixed-types qvec,nqft --type-concurrency 10 --vectors-file vectors.jsonl --tokens-file tokens.jsonl --database anli_test --tables ca_comprehensive_dataset,ca_comprehensive_dataset_copy,ca_comprehensive_dataset_copy01,ca_comprehensive_dataset_copy02 --duration {duration} > anli-vector-fulltext-mixed-query.log 2>&1
+    verify:
+      - command: ./anli_test_verfiy.sh > mo-vector-verfiy.log 2>&1
+    verify-mode: after
+    log-paths:
+      - path: anli-vector-fulltext-mixed-query.log
+      - path: mo-vector-verfiy.log
