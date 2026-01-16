@@ -28,6 +28,9 @@ class Chaos_Thread:
         self.logger = logger
         self.stop_event = threading.Event()
         self.db_config = self.chaos_yaml_data.get('chaos', {}).get('mo-env', {})
+        # 获取全局任务间隔时间（秒），默认为0（不等待）
+        self.global_task_interval = self.chaos_yaml_data.get('chaos', {}).get('chaos_combination', {}).get('task_interval', 0)
+        self.logger.info(f"Global task_interval loaded: {self.global_task_interval} seconds")
 
     # 顺序执行
     def execute_tasks(self):
@@ -38,24 +41,40 @@ class Chaos_Thread:
         elif self.mode == "parallel":
             self.execute_task_parallel()
         else:
-            logger.error("execute task mode f{self.mode} not exists")
+            self.logger.error(f"execute task mode {self.mode} not exists")
 
     def execute_task_sequential(self):
         while not self.stop_event.is_set():
-            for task in self.tasks:
+            for idx, task in enumerate(self.tasks):
                 if self.stop_event.is_set():
                     break
                 self.run_task(task)
+                # 在任务之间添加间隔时间（包括最后一个任务）
+                task_interval = task.get('task_interval', self.global_task_interval)
+                self.logger.info(f"Task '{task.get('name', 'unknown')}' completed. Task interval: {task_interval} seconds (global: {self.global_task_interval})")
+                if task_interval > 0:
+                    self.logger.info(f"Waiting {task_interval} seconds before next task...")
+                    time.sleep(task_interval)
+                else:
+                    self.logger.info(f"No wait interval (task_interval={task_interval})")
 
     # 随机执行
     def execute_task_random(self):
         while not self.stop_event.is_set():
             tasks = self.tasks.copy()
             random.shuffle(tasks)
-            for task in tasks:
+            for idx, task in enumerate(tasks):
                 if self.stop_event.is_set():
                    break
                 self.run_task(task)
+                # 在任务之间添加间隔时间（包括最后一个任务）
+                task_interval = task.get('task_interval', self.global_task_interval)
+                self.logger.info(f"Task '{task.get('name', 'unknown')}' completed. Task interval: {task_interval} seconds (global: {self.global_task_interval})")
+                if task_interval > 0:
+                    self.logger.info(f"Waiting {task_interval} seconds before next task...")
+                    time.sleep(task_interval)
+                else:
+                    self.logger.info(f"No wait interval (task_interval={task_interval})")
 
     # 并行执行
     def execute_task_parallel(self):

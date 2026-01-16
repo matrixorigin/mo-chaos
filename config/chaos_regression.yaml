@@ -1,0 +1,205 @@
+chaos:
+  cm-chaos:
+    - name: task_kill_cn
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: PodChaos
+        metadata:
+          name: pod-kill-cn
+          namespace: mocluster
+        spec:
+          action: pod-kill
+          gracePeriod: 30
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'CNSet'
+      times: 1
+      interval: 30
+      is_delete_after_apply: true
+    - name: task_kill_dn
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: PodChaos
+        metadata:
+          name: pod-kill-dn
+          namespace: mocluster
+        spec:
+          action: pod-kill
+          gracePeriod: 30
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'DNSet'
+      times: 1
+      interval: 30
+      is_delete_after_apply: true
+    - name: task_kill_logservice
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: PodChaos
+        metadata:
+          name: pod-kill-log
+          namespace: mocluster
+        spec:
+          action: pod-kill
+          gracePeriod: 30
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'LogSet'
+      times: 1
+      interval: 30
+      is_delete_after_apply: true
+    - name: task_mem_dn
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: StressChaos
+        metadata:
+          name: mem-stress-dn
+          namespace: mocluster
+        spec:
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'DNSet'
+          stressors:
+            memory:
+              workers: 1      # 启动 1 个 mem 压力线程
+              size: '11GB'      # 约占总内存的 55%，保留 20GB 给系统和应用
+          duration: "5m"
+      times: 1
+      interval: 300
+      is_delete_after_apply: true
+    - name: task_mem_cn
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: StressChaos
+        metadata:
+          name: mem-stress-cn
+          namespace: mocluster
+        spec:
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'CNSet'
+          stressors:
+            memory:
+              workers: 1      # 启动 1 个 mem 压力线程
+              size: '25GB'      # 约占总内存的 55%，保留 20GB 给系统和应用
+          duration: "5m"
+      times: 1
+      interval: 300
+      is_delete_after_apply: true
+    - name: task_mem_log
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: StressChaos
+        metadata:
+          name: mem-stress-log
+          namespace: mocluster
+        spec:
+          mode: one
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'LogSet'
+          stressors:
+            memory:
+              workers: 1      # 启动 1 个 mem 压力线程
+              size: '3GB'      # 约占总内存的 50%，保留 3GB 给系统和应用
+          duration: "5m"
+      times: 1
+      interval: 300
+      is_delete_after_apply: true
+    - name: task_network_cn
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: NetworkChaos
+        metadata:
+          name: bandwidth-cn
+          namespace: mocluster
+        spec:
+          action: bandwidth
+          mode: all
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'CNSet'
+          bandwidth:
+            rate: '500kbps'
+            limit: 1000
+            buffer: 1000
+          duration: "1m"
+      times: 1
+      interval: 60
+      is_delete_after_apply: true
+    - name: task_network_dn
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: NetworkChaos
+        metadata:
+          name: bandwidth-dn
+          namespace: mocluster
+        spec:
+          action: bandwidth
+          mode: all
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'DNSet'
+          bandwidth:
+            rate: '500kbps'
+            limit: 1000
+            buffer: 1000
+          duration: "1m"
+      times: 1
+      interval: 60
+      is_delete_after_apply: true
+    - name: task_network_log
+      kubectl_yaml: |
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: NetworkChaos
+        metadata:
+          name: bandwidth-log
+          namespace: mocluster
+        spec:
+          action: bandwidth
+          mode: all
+          selector:
+            namespaces:
+              - mocluster
+            labelSelectors:
+              'matrixorigin.io/component': 'LogSet'
+          bandwidth:
+            rate: '500kbps'
+            limit: 1000
+            buffer: 1000
+          duration: "1m"
+      times: 1
+      interval: 60
+      is_delete_after_apply: true
+  sql-chaos:
+
+  chaos_combination:
+    mode: "in-turn"  # or "random-turn"
+    task_interval: 300  # 任务之间的间隔时间（秒），默认为0。也可以在单个任务中设置 task_interval 来覆盖此全局设置
+  mo-env:
+    host: "127.0.0.1"
+    user: "dump"
+    port: 6001
+    password: "111"
+  namespace: mocluster
