@@ -24,16 +24,11 @@ class Thread_Controller:
         chaos_thread = threading.Thread(target=self.chaos_class.execute_tasks)
         chaos_thread.start()
 
-        # 等待测试线程完成
         self.test_class.stop_event.wait()
-        self.logger.info("Test tasks finished, but chaos tasks will continue running.")
 
-        # 等待 chaos 线程（会一直运行直到手动停止，比如 Ctrl+C）
-        try:
-            chaos_thread.join()
-        except KeyboardInterrupt:
-            self.logger.info("Received interrupt signal, stopping chaos tasks.")
-            self.chaos_class.stop()
-            chaos_thread.join()
-            self.logger.info("All tasks stopped.")
+        self.chaos_class.stop()
+
+        chaos_thread.join()
+
+        self.logger.info("Test tasks finished, stopping chaos tasks.")
 
