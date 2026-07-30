@@ -233,6 +233,60 @@ class Chaos_Thread:
         else:
             self.logger.info(f"sql chaos name {task['type']} is not exists!")
 
+    # kubectl apply/delete can hang (esp. NetworkChaos bandwidth finalizer/tc cleanup).
+    # Without a timeout the sequential chaos loop blocks for hours and skips later tasks.
+    KUBECTL_TIMEOUT_SEC = 120
+
+    def run_kubectl(self, command, timeout=None):
+        """Run kubectl with timeout; on timeout attempt non-blocking/force cleanup for deletes."""
+        if timeout is None:
+            timeout = self.KUBECTL_TIMEOUT_SEC
+        self.logger.info(f"Executing: {command}")
+        try:
+            result = subprocess.run(
+                command, shell=True, check=True, capture_output=True, text=True, timeout=timeout
+            )
+            return result
+        except subprocess.TimeoutExpired as e:
+            self.logger.error(f"kubectl timed out after {timeout}s: {command}")
+            if "kubectl delete" in command:
+                self.force_cleanup_after_delete_timeout(command)
+            raise
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"Error executing command: {e.stderr}")
+            raise
+
+    def force_cleanup_after_delete_timeout(self, original_delete_cmd):
+        """Best-effort unblock when Chaos Mesh CR delete hangs on finalizers."""
+        # Prefer --wait=false so kubectl returns even if finalizers linger.
+        force_cmds = []
+        if " -f " in original_delete_cmd or original_delete_cmd.strip().endswith(".yaml"):
+            # kubectl delete -f <file> ...
+            base = original_delete_cmd.replace("kubectl delete", "kubectl delete --wait=false", 1)
+            force_cmds.append(base)
+            force_cmds.append(
+                original_delete_cmd.replace(
+                    "kubectl delete", "kubectl delete --force --grace-period=0 --wait=false", 1
+                )
+            )
+        else:
+            force_cmds.append(
+                original_delete_cmd.replace(
+                    "kubectl delete", "kubectl delete --wait=false --timeout=30s", 1
+                )
+            )
+            force_cmds.append(
+                original_delete_cmd.replace(
+                    "kubectl delete", "kubectl delete --force --grace-period=0 --wait=false", 1
+                )
+            )
+        for cmd in force_cmds:
+            try:
+                self.logger.info(f"Force cleanup: {cmd}")
+                subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=60)
+            except Exception as fe:
+                self.logger.error(f"Force cleanup failed: {fe}")
+
     def execute_cm_chaos(self, task):
         cm_chaos_yml_file = os.path.join(self.cm_chaos_yml_path, task['name'] + ".yaml")
         # Save the kubectl YAML content to a local file
@@ -245,28 +299,39 @@ class Chaos_Thread:
         command_apply = f"kubectl apply -f {cm_chaos_yml_file}"
         command_delete = f"kubectl delete -f {cm_chaos_yml_file}"
 
-        try:
-            for _ in range(task['times']):
-                self.logger.info(f"Executing: {command_apply}")
-                result = subprocess.run(command_apply, shell=True, check=True, capture_output=True, text=True)
+        for _ in range(task['times']):
+            if self.stop_event.is_set():
+                break
+            try:
+                result = self.run_kubectl(command_apply)
                 self.logger.info(f"Success: {result.stdout}")
-                time.sleep(task['interval'])
-                if task['is_delete_after_apply']:
-                    # Clean up after execution
-                    self.logger.info(f"Executing: {command_delete}")
-                    result = subprocess.run(command_delete, shell=True, check=True, capture_output=True, text=True)
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                # Continue soak; do not abort remaining chaos tasks.
+                continue
+            time.sleep(task['interval'])
+            if task['is_delete_after_apply']:
+                try:
+                    result = self.run_kubectl(command_delete)
                     self.logger.info(f"Cleanup Success: {result.stdout}")
-
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Error executing command: {e.stderr}")
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                    self.logger.error(
+                        f"Cleanup failed or timed out for {cm_chaos_yml_file}; continuing next chaos task"
+                    )
 
     def execute_chaos(self, task):
-        command_delete_all_cm_chaos = f"kubectl delete chaos -n {self.namespace} --all"
+        # Resource type "chaos" does not exist; delete concrete Chaos Mesh kinds.
+        ns = self.namespace
+        command_delete_all_cm_chaos = (
+            f"kubectl delete networkchaos,podchaos,stresschaos,iochaos "
+            f"-n {ns} --all --wait=false --timeout=60s"
+        )
         try:
-            result = subprocess.run(command_delete_all_cm_chaos, shell=True, check=True, capture_output=True, text=True)
+            result = self.run_kubectl(command_delete_all_cm_chaos, timeout=90)
             self.logger.info(f"{command_delete_all_cm_chaos} success: {result.stdout}")
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"{command_delete_all_cm_chaos} failed: {e.stderr}")
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            # Not found / empty namespace is fine; log and continue.
+            err = getattr(e, "stderr", str(e))
+            self.logger.error(f"{command_delete_all_cm_chaos} failed: {err}")
 
         if 'kubectl_yaml' in task:
             self.execute_cm_chaos(task)
