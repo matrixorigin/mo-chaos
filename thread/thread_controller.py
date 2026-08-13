@@ -19,16 +19,16 @@ class Thread_Controller:
 
     def start(self):
         test_thread = threading.Thread(target=self.test_class.execute_tasks)
-        test_thread.start()
-
         chaos_thread = threading.Thread(target=self.chaos_class.execute_tasks)
-        chaos_thread.start()
 
-        self.test_class.stop_event.wait()
-
-        self.chaos_class.stop()
-
-        chaos_thread.join()
+        self.chaos_class.maintenance_gate.start()
+        try:
+            test_thread.start()
+            chaos_thread.start()
+            self.test_class.stop_event.wait()
+            self.chaos_class.stop()
+            chaos_thread.join()
+        finally:
+            self.chaos_class.maintenance_gate.stop()
 
         self.logger.info("Test tasks finished, stopping chaos tasks.")
-

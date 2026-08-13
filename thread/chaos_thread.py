@@ -7,13 +7,14 @@ import pymysql
 import logging
 import os
 from queue import Queue
+from maintenance import MaintenanceGate
 
 def load_yaml(file_path):
     with open(file_path, 'r') as file:
         return yaml.safe_load(file)
 
 class Chaos_Thread:
-    def __init__(self, chaos_yaml_full_path, cm_chaos_yml_path, logger):
+    def __init__(self, chaos_yaml_full_path, cm_chaos_yml_path, logger, maintenance_gate=None):
         self.chaos_yaml_data = load_yaml(chaos_yaml_full_path)
         cm_chaos = self.chaos_yaml_data.get('chaos', {}).get('cm-chaos', [])
         sql_chaos = self.chaos_yaml_data.get('chaos', {}).get('sql-chaos', [])
@@ -27,6 +28,7 @@ class Chaos_Thread:
         self.cm_chaos_yml_path = cm_chaos_yml_path
         self.logger = logger
         self.stop_event = threading.Event()
+        self.maintenance_gate = maintenance_gate or MaintenanceGate(self.namespace, logger=logger)
         self.db_config = self.chaos_yaml_data.get('chaos', {}).get('mo-env', {})
         # 获取全局任务间隔时间（秒），默认为0（不等待）
         self.global_task_interval = self.chaos_yaml_data.get('chaos', {}).get('chaos_combination', {}).get('task_interval', 0)
@@ -54,7 +56,7 @@ class Chaos_Thread:
                 self.logger.info(f"Task '{task.get('name', 'unknown')}' completed. Task interval: {task_interval} seconds (global: {self.global_task_interval})")
                 if task_interval > 0:
                     self.logger.info(f"Waiting {task_interval} seconds before next task...")
-                    time.sleep(task_interval)
+                    self.maintenance_gate.wait_interval(task_interval, self.stop_event)
                 else:
                     self.logger.info(f"No wait interval (task_interval={task_interval})")
 
@@ -72,7 +74,7 @@ class Chaos_Thread:
                 self.logger.info(f"Task '{task.get('name', 'unknown')}' completed. Task interval: {task_interval} seconds (global: {self.global_task_interval})")
                 if task_interval > 0:
                     self.logger.info(f"Waiting {task_interval} seconds before next task...")
-                    time.sleep(task_interval)
+                    self.maintenance_gate.wait_interval(task_interval, self.stop_event)
                 else:
                     self.logger.info(f"No wait interval (task_interval={task_interval})")
 
@@ -281,10 +283,14 @@ class Chaos_Thread:
         for i in range(times):
             if self.stop_event.is_set():
                 break
-            self.logger.info(f"Executing Chaos Task: {task_name}, iteration {i + 1}")
-            self.execute_chaos(task)
+            if not self.maintenance_gate.enter_task(self.stop_event):
+                break
+            try:
+                self.logger.info(f"Executing Chaos Task: {task_name}, iteration {i + 1}")
+                self.execute_chaos(task)
+            finally:
+                self.maintenance_gate.leave_task()
 
     def stop(self):
         self.stop_event.set()
-
 
