@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any, Callable, Protocol
@@ -21,6 +22,38 @@ from .contract import (
 
 TARGET_REF = "target/chaos/multi-cn-bounded-recovery-v1"
 TEST_CONTRACT_ID = "contract/chaos/multi-cn-stale-topology-bounded/v1"
+MAX_EXTERNAL_DIAGNOSTIC_CHARS = 4096
+EXTERNAL_DIAGNOSTIC_CODES = frozenset(
+    {
+        "cleanup_detail",
+        "cleanup_failed",
+        "cleanup_exception",
+        "contract_error",
+        "coverage_not_exercised",
+        "harness_failure",
+        "scenario_timeout",
+        "unexpected_harness_failure",
+    }
+)
+
+
+def _bounded_external_diagnostic(code: str, value: Any) -> str:
+    """Serialize untrusted diagnostics as one allowlisted code and bounded digest."""
+
+    if code not in EXTERNAL_DIAGNOSTIC_CODES:
+        raise AssertionError(f"diagnostic code is not allowlisted: {code}")
+    try:
+        source = str(value)
+    except Exception:
+        source = "unprintable-external-diagnostic"
+    hasher = hashlib.sha256()
+    for offset in range(0, len(source), MAX_EXTERNAL_DIAGNOSTIC_CHARS):
+        hasher.update(
+            source[offset : offset + MAX_EXTERNAL_DIAGNOSTIC_CHARS].encode("utf-8")
+        )
+    digest = "sha256:" + hasher.hexdigest()
+    truncated = "true" if len(source) > MAX_EXTERNAL_DIAGNOSTIC_CHARS else "false"
+    return f"{code}; diagnostic_digest={digest}; source_truncated={truncated}"
 
 
 class HarnessFailure(RuntimeError):
@@ -194,6 +227,30 @@ class BoundedRecoveryScenario:
         if observed != {self.config.expected_image_digest}:
             raise ContractError("deployment image digests are mixed or unexpected")
 
+    @staticmethod
+    def _validate_topology(value: TopologyObservation) -> None:
+        parse_utc(value.observed_at_utc)
+        if type(value.replacement_ready) is not bool:
+            raise ContractError("topology replacement_ready must be a boolean")
+        if type(value.old_member_visible) is not bool:
+            raise ContractError("topology old_member_visible must be a boolean")
+
+    @staticmethod
+    def _sanitize_cleanup(value: CleanupReceipt) -> CleanupReceipt:
+        if type(value.ok) is not bool:
+            raise ContractError("cleanup ok must be a boolean")
+        parse_utc(value.finished_at_utc)
+        detail = (
+            _bounded_external_diagnostic("cleanup_detail", value.detail)
+            if value.detail
+            else ""
+        )
+        return CleanupReceipt(
+            ok=value.ok,
+            finished_at_utc=value.finished_at_utc,
+            detail=detail,
+        )
+
     def _run_probe(self, kind: str) -> dict[str, Any]:
         remaining = self._require_remaining(kind)
         budget = min(self.config.probe_budget_seconds, remaining)
@@ -278,6 +335,7 @@ class BoundedRecoveryScenario:
             while True:
                 self._require_remaining("stale topology observation")
                 topology = self.driver.observe_topology(self.deadline)
+                self._validate_topology(topology)
                 if topology.replacement_ready and self.timeline["replacement_ready_at"] == "unknown":
                     self.timeline["replacement_ready_at"] = topology.observed_at_utc
                 if topology.replacement_ready and topology.old_member_visible:
@@ -301,6 +359,7 @@ class BoundedRecoveryScenario:
                 while True:
                     self._require_remaining("old member eviction")
                     topology = self.driver.observe_topology(self.deadline)
+                    self._validate_topology(topology)
                     if not topology.old_member_visible:
                         self.timeline["old_member_evicted_at"] = topology.observed_at_utc
                         break
@@ -348,45 +407,60 @@ class BoundedRecoveryScenario:
             self.evidence_validity = "mismatch"
             self.product_result = "not_evaluated"
             self.failure_domain = "infra"
-            self.failure_reason = str(exc)
+            self.failure_reason = _bounded_external_diagnostic("contract_error", exc)
             raw_conclusion = "failure"
             execution_state = "blocked" if self.fault_receipt is None else "completed"
         except CoverageNotExercised as exc:
             self.product_result = "not_evaluated"
             self.exercise_state = "not_exercised"
-            self.failure_reason = str(exc)
+            self.failure_reason = _bounded_external_diagnostic(
+                "coverage_not_exercised", exc
+            )
         except HarnessFailure as exc:
             self.evidence_validity = "partial"
             self.product_result = "not_evaluated"
             self.failure_domain = "harness"
-            self.failure_reason = str(exc)
+            self.failure_reason = _bounded_external_diagnostic("harness_failure", exc)
             raw_conclusion = "failure"
         except TimeoutError as exc:
             self.evidence_validity = "valid" if self.fault_receipt is not None else "partial"
             self.product_result = "failed" if self.fault_receipt is not None else "not_evaluated"
             self.failure_domain = "product" if self.fault_receipt is not None else "infra"
-            self.failure_reason = str(exc)
+            self.failure_reason = _bounded_external_diagnostic("scenario_timeout", exc)
             raw_conclusion = "timed_out"
         except Exception as exc:
             self.evidence_validity = "partial"
             self.product_result = "not_evaluated"
             self.failure_domain = "harness"
-            self.failure_reason = f"unexpected harness failure: {exc}"
+            self.failure_reason = _bounded_external_diagnostic(
+                "unexpected_harness_failure", exc
+            )
             raw_conclusion = "failure"
         finally:
             try:
-                self.cleanup_receipt = self.driver.cleanup(self.deadline)
-                if not self.cleanup_receipt.ok:
+                raw_cleanup = self.driver.cleanup(self.deadline)
+                self.cleanup_receipt = self._sanitize_cleanup(raw_cleanup)
+                if self.driver.monotonic() > self.deadline:
                     self.evidence_validity = "infra_invalid"
                     self.product_result = "not_evaluated"
                     self.failure_domain = "infra"
-                    self.failure_reason = "cleanup failed: " + self.cleanup_receipt.detail
+                    self.failure_reason = "cleanup_deadline_exceeded"
+                    raw_conclusion = "failure"
+                elif not self.cleanup_receipt.ok:
+                    self.evidence_validity = "infra_invalid"
+                    self.product_result = "not_evaluated"
+                    self.failure_domain = "infra"
+                    self.failure_reason = _bounded_external_diagnostic(
+                        "cleanup_failed", raw_cleanup.detail
+                    )
                     raw_conclusion = "failure"
             except Exception as exc:  # cleanup must never hide the primary state
                 self.evidence_validity = "infra_invalid"
                 self.product_result = "not_evaluated"
                 self.failure_domain = "infra"
-                self.failure_reason = f"cleanup raised: {exc}"
+                self.failure_reason = _bounded_external_diagnostic(
+                    "cleanup_exception", exc
+                )
                 raw_conclusion = "failure"
 
         return self._result(raw_conclusion=raw_conclusion, execution_state=execution_state)

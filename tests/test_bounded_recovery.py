@@ -10,7 +10,11 @@ from bounded_recovery.campaign import evaluate_campaign
 from bounded_recovery.cli import main
 from bounded_recovery.contract import ContractError, canonical_digest
 from bounded_recovery.replay import ReplayDriver
-from bounded_recovery.scenario import BoundedRecoveryScenario, ScenarioConfig
+from bounded_recovery.scenario import (
+    BoundedRecoveryScenario,
+    HarnessFailure,
+    ScenarioConfig,
+)
 
 
 CANDIDATE = "1" * 40
@@ -100,9 +104,11 @@ def valid_fixture(attempt_id: str = "attempt-1") -> dict:
     }
 
 
-def run_fixture(fixture: dict) -> tuple[dict, ReplayDriver, list[dict]]:
+def run_fixture(
+    fixture: dict, driver: ReplayDriver | None = None
+) -> tuple[dict, ReplayDriver, list[dict]]:
     config = ScenarioConfig(**fixture["config"])
-    driver = ReplayDriver(fixture)
+    driver = driver or ReplayDriver(fixture)
     partials = []
     result = BoundedRecoveryScenario(
         config,
@@ -228,6 +234,111 @@ class BoundedRecoveryScenarioTest(unittest.TestCase):
         self.assertEqual("infra_invalid", result["evidence_validity"])
         self.assertEqual("not_evaluated", result["product_result"])
         self.assertEqual("infra", result["failure_domain"])
+
+    def test_string_false_cleanup_is_rejected_and_cannot_pass(self):
+        fixture = valid_fixture()
+        fixture["cleanup"]["ok"] = "false"
+        driver = ReplayDriver(fixture)
+        with self.assertRaisesRegex(ContractError, "cleanup.ok must be a JSON boolean"):
+            driver.cleanup(30)
+
+        result, driver, _ = run_fixture(fixture)
+        self.assertEqual(1, driver.cleanup_calls)
+        self.assertEqual("infra_invalid", result["evidence_validity"])
+        self.assertEqual("not_evaluated", result["product_result"])
+        self.assertIsNone(result["cleanup"])
+
+    def test_string_false_topology_flags_are_rejected_and_cannot_pass(self):
+        for field in ("replacement_ready", "old_member_visible"):
+            with self.subTest(field=field):
+                fixture = valid_fixture()
+                fixture["topology"][1][field] = "false"
+                result, driver, _ = run_fixture(fixture)
+
+                self.assertEqual(1, driver.cleanup_calls)
+                self.assertEqual("mismatch", result["evidence_validity"])
+                self.assertEqual("not_evaluated", result["product_result"])
+                self.assertIn("contract_error", result["failure_reason"])
+
+    def test_cleanup_past_shared_deadline_is_infra_invalid(self):
+        fixture = valid_fixture()
+        fixture["cleanup"]["duration_seconds"] = 60
+        result, driver, _ = run_fixture(fixture)
+
+        self.assertEqual(1, driver.cleanup_calls)
+        self.assertGreater(driver.monotonic(), fixture["config"]["scenario_budget_seconds"])
+        self.assertEqual("infra_invalid", result["evidence_validity"])
+        self.assertEqual("not_evaluated", result["product_result"])
+        self.assertEqual("infra", result["failure_domain"])
+        self.assertEqual("cleanup_deadline_exceeded", result["failure_reason"])
+        self.assertTrue(result["cleanup"]["ok"])
+
+    def test_cleanup_failure_detail_is_bounded_and_endpoint_redacted(self):
+        fixture = valid_fixture()
+        fixture["cleanup"] = {
+            "ok": False,
+            "detail": "x" * 5000 + f" failed cleanup at {RAW_DEAD_ENDPOINT}",
+        }
+        result, _, _ = run_fixture(fixture)
+        encoded = json.dumps(result, sort_keys=True)
+
+        self.assertNotIn(RAW_DEAD_ENDPOINT, encoded)
+        self.assertIn("cleanup_failed", result["failure_reason"])
+        self.assertIn("diagnostic_digest=sha256:", result["failure_reason"])
+        self.assertIn("source_truncated=true", result["failure_reason"])
+        self.assertIn("cleanup_detail", result["cleanup"]["detail"])
+        self.assertLess(len(result["failure_reason"]), 160)
+        self.assertLess(len(result["cleanup"]["detail"]), 160)
+
+    def test_all_driver_exception_classes_redact_external_endpoint(self):
+        fixture = valid_fixture()
+
+        class PreflightExceptionDriver(ReplayDriver):
+            def __init__(self, value: dict, error: Exception) -> None:
+                super().__init__(value)
+                self.error = error
+
+            def preflight(self, deadline: float):
+                del deadline
+                raise self.error
+
+        cases = (
+            ContractError(f"contract rejected {RAW_DEAD_ENDPOINT}"),
+            HarnessFailure(f"checker failed at {RAW_DEAD_ENDPOINT}"),
+            TimeoutError(f"driver timed out at {RAW_DEAD_ENDPOINT}"),
+            RuntimeError(f"driver crashed at {RAW_DEAD_ENDPOINT}"),
+        )
+        for error in cases:
+            with self.subTest(error=type(error).__name__):
+                driver = PreflightExceptionDriver(fixture, error)
+                result, driver, _ = run_fixture(fixture, driver)
+                encoded = json.dumps(result, sort_keys=True)
+
+                self.assertEqual(1, driver.cleanup_calls)
+                self.assertNotIn(RAW_DEAD_ENDPOINT, encoded)
+                self.assertEqual("not_evaluated", result["product_result"])
+                self.assertIn("diagnostic_digest=sha256:", result["failure_reason"])
+                self.assertLess(len(result["failure_reason"]), 160)
+
+    def test_cleanup_exception_is_bounded_and_endpoint_redacted(self):
+        fixture = valid_fixture()
+
+        class CleanupExceptionDriver(ReplayDriver):
+            def cleanup(self, deadline: float):
+                del deadline
+                self.cleanup_calls += 1
+                raise RuntimeError(f"cleanup crashed at {RAW_DEAD_ENDPOINT}")
+
+        driver = CleanupExceptionDriver(fixture)
+        result, driver, _ = run_fixture(fixture, driver)
+        encoded = json.dumps(result, sort_keys=True)
+
+        self.assertEqual(1, driver.cleanup_calls)
+        self.assertNotIn(RAW_DEAD_ENDPOINT, encoded)
+        self.assertEqual("infra_invalid", result["evidence_validity"])
+        self.assertEqual("not_evaluated", result["product_result"])
+        self.assertIn("cleanup_exception", result["failure_reason"])
+        self.assertIn("diagnostic_digest=sha256:", result["failure_reason"])
 
 
 class CampaignTest(unittest.TestCase):

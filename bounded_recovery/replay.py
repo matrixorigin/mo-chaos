@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from .contract import RemoteScopeObservation, SourceArtifact
+from .contract import ContractError, RemoteScopeObservation, SourceArtifact
 from .scenario import (
     CleanupReceipt,
     DeploymentObservation,
@@ -19,6 +19,12 @@ from .scenario import (
 
 def _utc(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _require_json_bool(value: Any, field: str) -> bool:
+    if type(value) is not bool:
+        raise ContractError(f"{field} must be a JSON boolean")
+    return value
 
 
 @dataclass
@@ -118,8 +124,12 @@ class ReplayDriver:
         self._time = max(self._time, float(item["at_seconds"]))
         return TopologyObservation(
             observed_at_utc=self.utc_now(),
-            replacement_ready=bool(item["replacement_ready"]),
-            old_member_visible=bool(item["old_member_visible"]),
+            replacement_ready=_require_json_bool(
+                item["replacement_ready"], "topology.replacement_ready"
+            ),
+            old_member_visible=_require_json_bool(
+                item["old_member_visible"], "topology.old_member_visible"
+            ),
         )
 
     def wait(self, seconds: float, deadline: float) -> None:
@@ -134,7 +144,7 @@ class ReplayDriver:
         item = self.fixture.get("cleanup", {"ok": True})
         self._time += float(item.get("duration_seconds", 0))
         return CleanupReceipt(
-            ok=bool(item["ok"]),
+            ok=_require_json_bool(item["ok"], "cleanup.ok"),
             finished_at_utc=self.utc_now(),
             detail=item.get("detail", ""),
         )
