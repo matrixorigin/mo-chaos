@@ -6,14 +6,17 @@ import unittest
 from copy import deepcopy
 from pathlib import Path
 
-from bounded_recovery.campaign import evaluate_campaign
+from bounded_recovery.campaign import evaluate_campaign, validate_attempt_result
 from bounded_recovery.cli import main
 from bounded_recovery.contract import ContractError, canonical_digest
 from bounded_recovery.replay import ReplayDriver
 from bounded_recovery.scenario import (
     BoundedRecoveryScenario,
+    FaultReceipt,
     HarnessFailure,
     ScenarioConfig,
+    TARGET_REF,
+    TEST_CONTRACT_ID,
 )
 
 
@@ -119,6 +122,43 @@ def run_fixture(
     return result, driver, partials
 
 
+def redigest(value: dict) -> None:
+    unsigned = dict(value)
+    unsigned.pop("content_digest", None)
+    value["content_digest"] = canonical_digest(unsigned)
+
+
+def forged_green_attempts() -> list[dict]:
+    attempts = []
+    for index in range(20):
+        attempt = {
+            "format": "recovery-contract-result/v1",
+            "target_ref": TARGET_REF,
+            "test_contract_id": TEST_CONTRACT_ID,
+            "attempt_id": f"forged-{index:02d}",
+            "candidate_revision": None,
+            "cluster": {
+                "cluster_uid": None,
+                "generation": None,
+                "expected_image_digest": None,
+            },
+            "evidence_validity": "valid",
+            "product_result": "passed",
+            "oracle_observation": {"exercise_state": "exercised"},
+            "probes": [
+                {
+                    "probe_kind": kind,
+                    "remote_execution_witness": {"witness_state": "verified"},
+                }
+                for kind in ("baseline", "stale_window", "post_eviction")
+            ],
+            "cleanup": {"ok": True},
+        }
+        redigest(attempt)
+        attempts.append(attempt)
+    return attempts
+
+
 class BoundedRecoveryScenarioTest(unittest.TestCase):
     def test_success_requires_both_fault_probes_and_three_verified_witnesses(self):
         result, driver, partials = run_fixture(valid_fixture())
@@ -186,6 +226,64 @@ class BoundedRecoveryScenarioTest(unittest.TestCase):
         self.assertEqual("mismatch", result["probes"][0]["remote_execution_witness"]["witness_state"])
         self.assertEqual("not_started", result["timeline"]["fault_start"])
         self.assertEqual(1, driver.cleanup_calls)
+
+    def test_exact_deadline_blocks_fault_injection_but_positive_time_allows_it(self):
+        class CountingFaultDriver(ReplayDriver):
+            fault_calls = 0
+
+            def inject_fault(self, deadline: float):
+                self.fault_calls += 1
+                return super().inject_fault(deadline)
+
+        exhausted = valid_fixture()
+        exhausted["config"].update(
+            scenario_budget_seconds=2,
+            probe_budget_seconds=2,
+        )
+        exhausted["probes"]["baseline"]["duration_seconds"] = 2
+        exhausted["fault"]["duration_seconds"] = 0
+        exhausted["cleanup"]["duration_seconds"] = 0
+        exhausted_driver = CountingFaultDriver(exhausted)
+        result, exhausted_driver, _ = run_fixture(exhausted, exhausted_driver)
+
+        self.assertEqual(0, exhausted_driver.fault_calls)
+        self.assertEqual("not_started", result["timeline"]["fault_start"])
+        self.assertEqual("not_evaluated", result["product_result"])
+
+        positive = deepcopy(exhausted)
+        positive["config"]["scenario_budget_seconds"] = 2.001
+        positive_driver = CountingFaultDriver(positive)
+        run_fixture(positive, positive_driver)
+        self.assertEqual(1, positive_driver.fault_calls)
+
+    def test_fault_receipt_timestamp_is_validated_before_publication(self):
+        class TimestampFaultDriver(ReplayDriver):
+            injected_timestamp = RAW_DEAD_ENDPOINT
+
+            def inject_fault(self, deadline: float):
+                receipt = super().inject_fault(deadline)
+                return FaultReceipt(
+                    target_cn=receipt.target_cn,
+                    endpoint=receipt.endpoint,
+                    started_at_utc=self.injected_timestamp,
+                )
+
+        fixture = valid_fixture()
+        malformed_driver = TimestampFaultDriver(fixture)
+        result, malformed_driver, _ = run_fixture(fixture, malformed_driver)
+        encoded = json.dumps(result, sort_keys=True)
+
+        self.assertNotIn(RAW_DEAD_ENDPOINT, encoded)
+        self.assertEqual("not_started", result["timeline"]["fault_start"])
+        self.assertEqual("mismatch", result["evidence_validity"])
+        self.assertEqual("not_evaluated", result["product_result"])
+        self.assertIn("contract_error", result["failure_reason"])
+
+        boundary_fixture = valid_fixture()
+        boundary_driver = TimestampFaultDriver(boundary_fixture)
+        boundary_driver.injected_timestamp = "2026-08-24T02:30:00.250000Z"
+        boundary_result, _, _ = run_fixture(boundary_fixture, boundary_driver)
+        self.assertEqual("passed", boundary_result["product_result"])
 
     def test_probe_without_remote_scope_is_not_observed(self):
         fixture = valid_fixture()
@@ -368,10 +466,43 @@ class CampaignTest(unittest.TestCase):
         self.assertEqual(19, result["stale_window_exercised"])
         self.assertEqual({"not_evaluated": 1, "passed": 19}, result["product_result_counts"])
 
+    def test_attempt_validator_preserves_genuine_non_green_results(self):
+        fixtures = []
+        preflight_mismatch = valid_fixture()
+        preflight_mismatch["deployment"]["image_digests"].append("sha256:" + "9" * 64)
+        fixtures.append(preflight_mismatch)
+        stale_miss = valid_fixture()
+        stale_miss["topology"] = [
+            {
+                "at_seconds": 1,
+                "replacement_ready": True,
+                "old_member_visible": False,
+            }
+        ]
+        fixtures.append(stale_miss)
+        harness_failure = valid_fixture()
+        harness_failure["probes"]["stale_window"]["raise"] = "checker crashed"
+        fixtures.append(harness_failure)
+        timeout = valid_fixture()
+        timeout["probes"]["stale_window"]["duration_seconds"] = 10
+        fixtures.append(timeout)
+        cleanup_failure = valid_fixture()
+        cleanup_failure["cleanup"] = {"ok": False, "detail": "remained"}
+        fixtures.append(cleanup_failure)
+        late_cleanup = valid_fixture()
+        late_cleanup["cleanup"]["duration_seconds"] = 60
+        fixtures.append(late_cleanup)
+
+        for fixture in fixtures:
+            with self.subTest(expected=fixture):
+                validate_attempt_result(run_fixture(fixture)[0])
+
     def test_campaign_rejects_wrong_count_duplicate_ids_and_drift(self):
         attempts = [run_fixture(valid_fixture(f"attempt-{index:02d}"))[0] for index in range(20)]
         with self.assertRaises(ContractError):
             evaluate_campaign(attempts[:-1])
+        with self.assertRaises(ContractError):
+            evaluate_campaign([*attempts, deepcopy(attempts[-1])])
         duplicated = deepcopy(attempts)
         duplicated[1]["attempt_id"] = duplicated[0]["attempt_id"]
         with self.assertRaises(ContractError):
@@ -384,9 +515,57 @@ class CampaignTest(unittest.TestCase):
     def test_campaign_rejects_tampered_attempt_even_if_claimed_result_is_green(self):
         attempts = [run_fixture(valid_fixture(f"attempt-{index:02d}"))[0] for index in range(20)]
         attempts[4] = deepcopy(attempts[4])
-        attempts[4]["timeline"]["fault_start"] = "2026-08-24T00:00:00.000000Z"
+        attempts[4]["attempt_id"] = "attempt-mutated-without-redigest"
         with self.assertRaisesRegex(ContractError, "content digest mismatch"):
             evaluate_campaign(attempts)
+
+    def test_campaign_rejects_recomputed_minimal_forged_green_attempts(self):
+        with self.assertRaisesRegex(ContractError, "attempt schema mismatch"):
+            evaluate_campaign(forged_green_attempts())
+
+    def test_campaign_rejects_recomputed_semantic_forgeries(self):
+        original = [
+            run_fixture(valid_fixture(f"attempt-{index:02d}"))[0]
+            for index in range(20)
+        ]
+
+        def wrong_axis(attempt: dict) -> None:
+            attempt["failure_domain"] = "product"
+
+        def missing_probe(attempt: dict) -> None:
+            del attempt["probes"][1]
+
+        def wrong_witness_digest(attempt: dict) -> None:
+            attempt["probes"][0]["remote_execution_witness_digest"] = (
+                "sha256:" + "9" * 64
+            )
+
+        def wrong_timeline(attempt: dict) -> None:
+            attempt["timeline"]["recovery_frontier"] = attempt["timeline"][
+                "stale_probe_finished_at"
+            ]
+
+        def string_cleanup_bool(attempt: dict) -> None:
+            attempt["cleanup"]["ok"] = "true"
+
+        def untyped_cluster(attempt: dict) -> None:
+            attempt["cluster"]["cluster_uid"] = None
+
+        cases = (
+            (wrong_axis, "result axes"),
+            (missing_probe, "result axes"),
+            (wrong_witness_digest, "witness digest mismatch"),
+            (wrong_timeline, "recovery frontier"),
+            (string_cleanup_bool, "must be a boolean"),
+            (untyped_cluster, "non-empty bounded string"),
+        )
+        for mutate, message in cases:
+            with self.subTest(case=mutate.__name__):
+                attempts = deepcopy(original)
+                mutate(attempts[0])
+                redigest(attempts[0])
+                with self.assertRaisesRegex(ContractError, message):
+                    evaluate_campaign(attempts)
 
 
 class OfflineCliTest(unittest.TestCase):
@@ -412,6 +591,19 @@ class OfflineCliTest(unittest.TestCase):
             self.assertTrue(output_path.exists())
             self.assertTrue((root / "partial-recovery-contract-result.json").exists())
             self.assertEqual("passed", json.loads(output_path.read_text())["product_result"])
+
+    def test_campaign_cli_rejects_recomputed_minimal_forged_green_attempts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output_path = root / "campaign.json"
+            argv = ["campaign", "--output", str(output_path)]
+            for index, attempt in enumerate(forged_green_attempts()):
+                attempt_path = root / f"attempt-{index:02d}.json"
+                attempt_path.write_text(json.dumps(attempt), encoding="utf-8")
+                argv.extend(("--attempt", str(attempt_path)))
+
+            self.assertEqual(2, main(argv))
+            self.assertFalse(output_path.exists())
 
 
 if __name__ == "__main__":

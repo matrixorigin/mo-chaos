@@ -22,6 +22,10 @@ from .contract import (
 
 TARGET_REF = "target/chaos/multi-cn-bounded-recovery-v1"
 TEST_CONTRACT_ID = "contract/chaos/multi-cn-stale-topology-bounded/v1"
+CONTRACT_ALLOWED_RETRIABLE_ERRORS = (
+    "backend_create_timeout",
+    "retryable_topology_change",
+)
 MAX_EXTERNAL_DIAGNOSTIC_CHARS = 4096
 EXTERNAL_DIAGNOSTIC_CODES = frozenset(
     {
@@ -91,10 +95,7 @@ class ScenarioConfig:
     scenario_budget_seconds: float = 1800.0
     probe_budget_seconds: float = 30.0
     poll_interval_seconds: float = 1.0
-    allowed_retriable_errors: tuple[str, ...] = (
-        "backend_create_timeout",
-        "retryable_topology_change",
-    )
+    allowed_retriable_errors: tuple[str, ...] = CONTRACT_ALLOWED_RETRIABLE_ERRORS
 
     def validate(self) -> None:
         require_revision(self.candidate_revision)
@@ -174,7 +175,8 @@ class BoundedRecoveryScenario:
         self.started = driver.monotonic()
         self.deadline = self.started + config.scenario_budget_seconds
         self.probes: list[dict[str, Any]] = []
-        deadline_utc = parse_utc(driver.utc_now()) + timedelta(
+        self.started_at_utc = parse_utc(driver.utc_now())
+        self.deadline_utc = self.started_at_utc + timedelta(
             seconds=config.scenario_budget_seconds
         )
         self.timeline: dict[str, str] = {
@@ -187,9 +189,9 @@ class BoundedRecoveryScenario:
             "recovery_probe_started_at": "not_started",
             "recovery_probe_finished_at": "not_started",
             "recovery_frontier": "unknown",
-            "scenario_deadline": deadline_utc.isoformat(timespec="microseconds").replace(
-                "+00:00", "Z"
-            ),
+            "scenario_deadline": self.deadline_utc.isoformat(
+                timespec="microseconds"
+            ).replace("+00:00", "Z"),
         }
         self.failure_domain: str | None = None
         self.failure_reason: str | None = None
@@ -234,6 +236,27 @@ class BoundedRecoveryScenario:
             raise ContractError("topology replacement_ready must be a boolean")
         if type(value.old_member_visible) is not bool:
             raise ContractError("topology old_member_visible must be a boolean")
+
+    def _validate_fault_receipt(
+        self, value: FaultReceipt, *, baseline_finished_at_utc: str
+    ) -> None:
+        assert self.deployment is not None
+        if (
+            value.target_cn != self.deployment.fault_target_cn
+            or value.endpoint != self.deployment.fault_endpoint
+        ):
+            raise ContractError("fault receipt does not match the preflight target")
+        baseline_finished = parse_utc(baseline_finished_at_utc)
+        fault_started = parse_utc(value.started_at_utc)
+        observed_now = parse_utc(self.driver.utc_now())
+        if not (
+            self.started_at_utc
+            <= baseline_finished
+            <= fault_started
+            <= observed_now
+            <= self.deadline_utc
+        ):
+            raise ContractError("fault receipt timestamp is outside the scenario interval")
 
     @staticmethod
     def _sanitize_cleanup(value: CleanupReceipt) -> CleanupReceipt:
@@ -323,12 +346,12 @@ class BoundedRecoveryScenario:
                 self.failure_reason = "baseline remote execution was not verified"
                 raise CoverageNotExercised(self.failure_reason)
 
+            self._require_remaining("fault injection")
             self.fault_receipt = self.driver.inject_fault(self.deadline)
-            if (
-                self.fault_receipt.target_cn != self.deployment.fault_target_cn
-                or self.fault_receipt.endpoint != self.deployment.fault_endpoint
-            ):
-                raise ContractError("fault receipt does not match the preflight target")
+            self._validate_fault_receipt(
+                self.fault_receipt,
+                baseline_finished_at_utc=baseline["finished_at_utc"],
+            )
             self.timeline["fault_start"] = self.fault_receipt.started_at_utc
             self._emit_partial("fault_injected")
 
