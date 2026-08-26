@@ -261,13 +261,6 @@ class Chaos_Thread:
             self.logger.error(f"Error executing command: {e.stderr}")
 
     def execute_chaos(self, task):
-        command_delete_all_cm_chaos = f"kubectl delete chaos -n {self.namespace} --all"
-        try:
-            result = subprocess.run(command_delete_all_cm_chaos, shell=True, check=True, capture_output=True, text=True)
-            self.logger.info(f"{command_delete_all_cm_chaos} success: {result.stdout}")
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"{command_delete_all_cm_chaos} failed: {e.stderr}")
-
         if 'kubectl_yaml' in task:
             self.execute_cm_chaos(task)
         else:
@@ -286,5 +279,4 @@ class Chaos_Thread:
 
     def stop(self):
         self.stop_event.set()
-
 
