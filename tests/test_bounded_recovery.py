@@ -182,6 +182,7 @@ class BoundedRecoveryScenarioTest(unittest.TestCase):
         without_digest = dict(result)
         digest = without_digest.pop("content_digest")
         self.assertEqual(digest, canonical_digest(without_digest))
+        validate_attempt_result(result)
 
     def test_stale_window_miss_is_not_exercised_not_passed(self):
         fixture = valid_fixture()
@@ -314,15 +315,53 @@ class BoundedRecoveryScenarioTest(unittest.TestCase):
         self.assertEqual(1, driver.cleanup_calls)
 
     def test_allowlisted_retriable_stale_failure_can_satisfy_contract(self):
-        fixture = valid_fixture()
-        fixture["probes"]["stale_window"].update(
+        for error_class in (
+            "backend_create_timeout",
+            "retryable_topology_change",
+        ):
+            with self.subTest(error_class=error_class):
+                fixture = valid_fixture()
+                fixture["probes"]["stale_window"].update(
+                    outcome="retriable_error",
+                    consistency_ok=None,
+                    error_class=error_class,
+                )
+                result, _, _ = run_fixture(fixture)
+
+                self.assertEqual("passed", result["product_result"])
+                validate_attempt_result(result)
+
+    def test_invalid_probe_outcome_tuples_fail_closed_before_serialization(self):
+        success_with_error = valid_fixture()
+        success_with_error["probes"]["baseline"]["error_class"] = RAW_DEAD_ENDPOINT
+        retriable_with_consistency = valid_fixture()
+        retriable_with_consistency["probes"]["stale_window"].update(
             outcome="retriable_error",
-            consistency_ok=None,
+            consistency_ok=True,
             error_class="backend_create_timeout",
         )
-        result, _, _ = run_fixture(fixture)
+        retriable_with_external_error = valid_fixture()
+        retriable_with_external_error["probes"]["stale_window"].update(
+            outcome="retriable_error",
+            consistency_ok=None,
+            error_class=RAW_DEAD_ENDPOINT,
+        )
 
-        self.assertEqual("passed", result["product_result"])
+        for fixture in (
+            success_with_error,
+            retriable_with_consistency,
+            retriable_with_external_error,
+        ):
+            with self.subTest(fixture=fixture):
+                result, driver, _ = run_fixture(fixture)
+                encoded = json.dumps(result, sort_keys=True)
+
+                self.assertEqual(1, driver.cleanup_calls)
+                self.assertEqual("mismatch", result["evidence_validity"])
+                self.assertEqual("not_evaluated", result["product_result"])
+                self.assertIn("contract_error", result["failure_reason"])
+                self.assertNotIn(RAW_DEAD_ENDPOINT, encoded)
+                validate_attempt_result(result)
 
     def test_cleanup_failure_invalidates_an_otherwise_passing_attempt(self):
         fixture = valid_fixture()
@@ -604,6 +643,32 @@ class OfflineCliTest(unittest.TestCase):
 
             self.assertEqual(2, main(argv))
             self.assertFalse(output_path.exists())
+
+    def test_replay_rejects_success_with_external_error_class(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture_path = root / "fixture.json"
+            output_path = root / "recovery-contract-result.json"
+            fixture = valid_fixture()
+            fixture["probes"]["baseline"]["error_class"] = RAW_DEAD_ENDPOINT
+            fixture_path.write_text(json.dumps(fixture), encoding="utf-8")
+
+            self.assertEqual(
+                1,
+                main(
+                    [
+                        "replay",
+                        "--fixture",
+                        str(fixture_path),
+                        "--output",
+                        str(output_path),
+                    ]
+                ),
+            )
+            result = json.loads(output_path.read_text())
+            self.assertNotIn(RAW_DEAD_ENDPOINT, json.dumps(result, sort_keys=True))
+            self.assertEqual("not_evaluated", result["product_result"])
+            validate_attempt_result(result)
 
 
 if __name__ == "__main__":

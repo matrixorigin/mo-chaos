@@ -282,6 +282,7 @@ class BoundedRecoveryScenario:
             raise HarnessFailure(f"driver returned {probe.kind} for {kind}")
         if probe.duration_seconds < 0 or probe.duration_seconds > budget:
             raise HarnessFailure(f"{kind} probe exceeded its bounded budget")
+        self._validate_probe_outcome(probe)
         assert self.deployment is not None
         witness = build_remote_execution_witness(
             probe_kind=kind,
@@ -314,15 +315,36 @@ class BoundedRecoveryScenario:
         self.probes.append(record)
         return record
 
+    def _validate_probe_outcome(self, probe: ProbeResult) -> None:
+        if probe.outcome == "success":
+            if type(probe.consistency_ok) is not bool or probe.error_class is not None:
+                raise ContractError("success probe outcome tuple is invalid")
+            return
+        if probe.outcome == "retriable_error":
+            if (
+                probe.consistency_ok is not None
+                or type(probe.error_class) is not str
+                or probe.error_class not in CONTRACT_ALLOWED_RETRIABLE_ERRORS
+                or probe.error_class not in self.config.allowed_retriable_errors
+            ):
+                raise ContractError("retriable probe outcome tuple is invalid")
+            return
+        raise ContractError("probe outcome is outside the contract")
+
     def _probe_contract_passes(self, probe: dict[str, Any], *, final: bool) -> bool:
         if probe["remote_execution_witness"]["witness_state"] != "verified":
             return False
         if final:
-            return probe["outcome"] == "success" and probe["consistency_ok"] is True
+            return (
+                probe["outcome"] == "success"
+                and probe["consistency_ok"] is True
+                and probe["error_class"] is None
+            )
         if probe["outcome"] == "success":
-            return probe["consistency_ok"] is True
+            return probe["consistency_ok"] is True and probe["error_class"] is None
         return (
             probe["outcome"] == "retriable_error"
+            and probe["consistency_ok"] is None
             and probe["error_class"] in self.config.allowed_retriable_errors
         )
 
