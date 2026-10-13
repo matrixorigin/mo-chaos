@@ -30,9 +30,10 @@ class Subtask_Test_Thread(threading.Thread):
 
         for step in self.task['run-steps']:
             self.logger.info(f"Executing {self.task['name']} Subtask_Test command: {step['command']}")
-            # Execute the command and redirect output to the log file
-            os.chdir(work_path)
-            process = subprocess.Popen(step['command'], shell=True, stderr=subprocess.STDOUT)
+            # cwd belongs to this child only; os.chdir() races with other workers.
+            process = subprocess.Popen(
+                step['command'], shell=True, stderr=subprocess.STDOUT, cwd=work_path
+            )
             process.wait()  # Wait for the command to complete
 
             if process.returncode == 0:
@@ -63,9 +64,10 @@ class Subtask_Verify_Thread(threading.Thread):
         while self.running:
             for step in self.task['verify']:
                 self.logger.info(f"Executing {self.task['name']} Subtask_Verify command: {step['command']}")
-                # Execute the command and redirect output to the log file
-                os.chdir(work_path)
-                process = subprocess.Popen(step['command'], shell=True, stderr=subprocess.STDOUT)
+                # Keep verification scripts and shell redirections in their own directory.
+                process = subprocess.Popen(
+                    step['command'], shell=True, stderr=subprocess.STDOUT, cwd=work_path
+                )
                 process.wait()  # Wait for the command to complete
                 if process.returncode == 0:
                     self.logger.info(f"Step completed successfully: {step['command']}")
