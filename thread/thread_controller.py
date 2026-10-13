@@ -25,10 +25,13 @@ class Thread_Controller:
         chaos_thread.start()
 
         self.test_class.stop_event.wait()
-
+        test_thread.join()
         self.chaos_class.stop()
 
         chaos_thread.join()
 
         self.logger.info("Test tasks finished, stopping chaos tasks.")
-
+        if not self.test_class.success:
+            self.logger.error("Test run failed; see workload and verification logs.")
+            return 1
+        return 0
