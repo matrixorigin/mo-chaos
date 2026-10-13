@@ -43,7 +43,7 @@ def main():
         sys.exit(1)
 
     controller = Thread_Controller(chaos_config_full_path, test_config_full_path, cm_chaos_yml_path, test_tool_parent_dir_path, test_tool_report_parent_dir_path, logger)
-    controller.start()
+    return controller.start()
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -1,4 +1,5 @@
 import os
+from contextlib import ExitStack
 from pathlib import Path
 import subprocess
 import tempfile
@@ -72,9 +73,13 @@ class SubtaskWorkingDirectoryTest(unittest.TestCase):
 
                 threads = [threading.Thread(target=run, args=(w,)) for w in workers]
                 try:
-                    with patch("thread.test_thread.subprocess.Popen", side_effect=launch), patch(
-                        "thread.test_thread.time.sleep", side_effect=stop_verifiers
-                    ):
+                    with ExitStack() as stack:
+                        stack.enter_context(patch("thread.test_thread.subprocess.Popen", side_effect=launch))
+                        for worker in workers:
+                            if isinstance(worker, Subtask_Verify_Thread):
+                                stack.enter_context(patch.object(
+                                    worker._stop_requested, "wait", side_effect=stop_verifiers
+                                ))
                         for thread in threads:
                             thread.start()
                         for thread in threads:
@@ -112,9 +117,14 @@ class SubtaskWorkingDirectoryTest(unittest.TestCase):
                     {"command": "exit 7"},
                 ])
                 try:
-                    with patch("thread.test_thread.os.chdir", side_effect=AssertionError(
-                        "worker must not change process cwd"
-                    )), patch("thread.test_thread.time.sleep", side_effect=lambda _: worker.stop()):
+                    with ExitStack() as stack:
+                        stack.enter_context(patch("thread.test_thread.os.chdir", side_effect=AssertionError(
+                            "worker must not change process cwd"
+                        )))
+                        if isinstance(worker, Subtask_Verify_Thread):
+                            stack.enter_context(patch.object(
+                                worker._stop_requested, "wait", side_effect=lambda _: worker.stop()
+                            ))
                         worker.run()
                     self.assertEqual((root / "tool" / "second.log").read_text(), "first")
                     self.assertEqual(Path.cwd(), original_cwd)
